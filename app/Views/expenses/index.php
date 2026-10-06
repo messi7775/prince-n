@@ -42,10 +42,27 @@
                         <td style="color:#e6466a"><?= money($ex['amount']) ?></td>
                         <td><?= e($ex['note'] ?? '') ?></td>
                         <td class="actions-cell">
-                            <form method="post" action="/expenses/delete" class="inline-form" onsubmit="return confirm('حذف هذا المصروف؟')">
+                            <div class="action-buttons">
+                                <button class="btn sm primary" type="button"
+                                    onclick="openRowForm('exp-edit-<?= (int)$ex['id'] ?>')">تعديل</button>
+                                <form method="post" action="/expenses/delete" class="inline-form" onsubmit="return confirm('حذف هذا المصروف؟')">
+                                    <?= csrf_field() ?>
+                                    <input type="hidden" name="id" value="<?= (int)$ex['id'] ?>">
+                                    <button class="btn sm danger" type="submit">حذف</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr class="inv-form-row" id="exp-edit-<?= (int)$ex['id'] ?>" style="display:none">
+                        <td colspan="5">
+                            <form method="post" action="/expenses/update" class="inline-inv-form">
                                 <?= csrf_field() ?>
                                 <input type="hidden" name="id" value="<?= (int)$ex['id'] ?>">
-                                <button class="btn sm danger" type="submit">حذف</button>
+                                <label>التصنيف: <input name="category" required value="<?= e($ex['category']) ?>"></label>
+                                <label>المبلغ: <input name="amount" type="number" min="1" required value="<?= (int)$ex['amount'] ?>"></label>
+                                <label>ملاحظة: <input name="note" value="<?= e($ex['note'] ?? '') ?>"></label>
+                                <button class="btn sm primary" type="submit">تأكيد التعديل</button>
+                                <button class="btn sm" type="button" onclick="closeRowForm('exp-edit-<?= (int)$ex['id'] ?>')">إلغاء</button>
                             </form>
                         </td>
                     </tr>
@@ -55,3 +72,15 @@
         <?php endif; ?>
     </section>
 </div>
+
+<script>
+function openRowForm(id) {
+    document.querySelectorAll('.inv-form-row').forEach(function(el) { el.style.display = 'none'; });
+    var el = document.getElementById(id);
+    if (el) el.style.display = '';
+}
+function closeRowForm(id) {
+    var el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+}
+</script>

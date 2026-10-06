@@ -40,10 +40,26 @@
                         <td style="color:#e6466a"><?= money($w['amount']) ?></td>
                         <td><?= e($w['note'] ?? '') ?></td>
                         <td class="actions-cell">
-                            <form method="post" action="/owner-withdrawals/delete" class="inline-form" onsubmit="return confirm('حذف هذا السحب؟')">
+                            <div class="action-buttons">
+                                <button class="btn sm primary" type="button"
+                                    onclick="openRowForm('wd-edit-<?= (int)$w['id'] ?>')">تعديل</button>
+                                <form method="post" action="/owner-withdrawals/delete" class="inline-form" onsubmit="return confirm('حذف هذا السحب؟')">
+                                    <?= csrf_field() ?>
+                                    <input type="hidden" name="id" value="<?= (int)$w['id'] ?>">
+                                    <button class="btn sm danger" type="submit">حذف</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr class="inv-form-row" id="wd-edit-<?= (int)$w['id'] ?>" style="display:none">
+                        <td colspan="4">
+                            <form method="post" action="/owner-withdrawals/update" class="inline-inv-form">
                                 <?= csrf_field() ?>
                                 <input type="hidden" name="id" value="<?= (int)$w['id'] ?>">
-                                <button class="btn sm danger" type="submit">حذف</button>
+                                <label>المبلغ: <input name="amount" type="number" min="1" required value="<?= (int)$w['amount'] ?>"></label>
+                                <label>ملاحظة: <input name="note" value="<?= e($w['note'] ?? '') ?>"></label>
+                                <button class="btn sm primary" type="submit">تأكيد التعديل</button>
+                                <button class="btn sm" type="button" onclick="closeRowForm('wd-edit-<?= (int)$w['id'] ?>')">إلغاء</button>
                             </form>
                         </td>
                     </tr>
@@ -53,3 +69,15 @@
         <?php endif; ?>
     </section>
 </div>
+
+<script>
+function openRowForm(id) {
+    document.querySelectorAll('.inv-form-row').forEach(function(el) { el.style.display = 'none'; });
+    var el = document.getElementById(id);
+    if (el) el.style.display = '';
+}
+function closeRowForm(id) {
+    var el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+}
+</script>

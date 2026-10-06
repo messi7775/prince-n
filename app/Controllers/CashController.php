@@ -147,10 +147,7 @@ final class CashController extends Controller
             try {
                 $db->beginTransaction();
                 (new OwnerWithdrawal())->delete($id);
-                (new CashMovement())->execute(
-                    "DELETE FROM cash_movements WHERE reference_type = 'owner_withdrawal' AND reference_id = ?",
-                    [$id]
-                );
+                (new CashMovement())->deleteByReference('owner_withdrawal', $id);
                 $db->commit();
             } catch (\Throwable $e) {
                 if ($db->inTransaction()) { $db->rollBack(); }

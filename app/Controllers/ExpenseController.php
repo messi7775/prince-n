@@ -134,10 +134,7 @@ final class ExpenseController extends Controller
             try {
                 $db->beginTransaction();
                 (new Expense())->delete($id);
-                (new CashMovement())->execute(
-                    "DELETE FROM cash_movements WHERE reference_type = 'expense' AND reference_id = ?",
-                    [$id]
-                );
+                (new CashMovement())->deleteByReference('expense', $id);
                 $db->commit();
             } catch (\Throwable $e) {
                 if ($db->inTransaction()) { $db->rollBack(); }
