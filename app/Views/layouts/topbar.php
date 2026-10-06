@@ -13,9 +13,9 @@
         <button class="icon-btn" type="button" id="theme-toggle" aria-label="تبديل الوضع الليلي/النهاري">
             <span class="sun">☀</span><span class="moon">☾</span>
         </button>
-        <form method="post" action="/logout">
+        <form method="post" action="/logout" class="logout-form">
             <?= csrf_field() ?>
-            <button class="icon-btn" type="submit" aria-label="تسجيل الخروج">↪</button>
+            <button class="icon-btn logout-btn" type="submit" aria-label="تسجيل الخروج"><span>↪</span><small>خروج</small></button>
         </form>
     </div>
 </header>

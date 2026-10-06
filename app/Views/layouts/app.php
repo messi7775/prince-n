@@ -46,6 +46,17 @@
         </nav>
     </main>
 </div>
+<div class="confirm-overlay" id="confirm-logout" role="dialog" aria-modal="true" aria-labelledby="confirm-logout-title">
+    <div class="confirm-card">
+        <div class="confirm-icon">↪</div>
+        <h3 id="confirm-logout-title">تسجيل الخروج</h3>
+        <p>هل أنت متأكد من رغبتك في تسجيل الخروج من النظام؟</p>
+        <div class="confirm-actions">
+            <button type="button" class="btn" data-confirm-cancel>إلغاء</button>
+            <button type="button" class="btn danger" data-confirm-ok>تأكيد الخروج</button>
+        </div>
+    </div>
+</div>
 <script src="/assets/js/app.js?v=<?= filemtime(dirname(__DIR__, 3) . '/assets/js/app.js') ?>"></script>
 <script src="/assets/js/filters.js?v=<?= filemtime(dirname(__DIR__, 3) . '/assets/js/filters.js') ?>"></script>
 <script src="/assets/js/row-menu.js?v=<?= filemtime(dirname(__DIR__, 3) . '/assets/js/row-menu.js') ?>"></script>

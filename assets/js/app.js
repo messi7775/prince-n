@@ -44,4 +44,28 @@
             try { localStorage.setItem('pn-theme', next); } catch (e) {}
         });
     }
+
+    /* ---------- Logout confirmation dialog ---------- */
+    const logoutForms = document.querySelectorAll('form.logout-form');
+    const confirmBox = document.getElementById('confirm-logout');
+    if (logoutForms.length && confirmBox) {
+        let pending = null;
+        logoutForms.forEach(f => f.addEventListener('submit', e => {
+            if (f.dataset.confirmed === '1') return;
+            e.preventDefault();
+            pending = f;
+            confirmBox.classList.add('open');
+        }));
+        const closeConfirm = () => { confirmBox.classList.remove('open'); pending = null; };
+        confirmBox.querySelector('[data-confirm-cancel]').addEventListener('click', closeConfirm);
+        confirmBox.querySelector('[data-confirm-ok]').addEventListener('click', () => {
+            if (!pending) return;
+            pending.dataset.confirmed = '1';
+            pending.submit();
+        });
+        confirmBox.addEventListener('click', e => { if (e.target === confirmBox) closeConfirm(); });
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape' && confirmBox.classList.contains('open')) closeConfirm();
+        });
+    }
 })();
