@@ -68,6 +68,7 @@
                         <td><?= money($p['amount']) ?></td>
                         <td><?= e($p['note'] ?? '') ?></td>
                         <td class="actions-cell">
+                            <a class="btn sm" href="/payments/receipt?id=<?= (int)$p['id'] ?>" target="_blank">وصل</a>
                             <button class="btn sm primary payment-edit-btn" type="button"
                                 data-id="<?= (int)$p['id'] ?>"
                                 data-distributor="<?= (int)$p['distributor_id'] ?>"

@@ -17,6 +17,18 @@ final class Payment extends Model
         );
     }
 
+    /** One payment with distributor name (receipts). */
+    public function findWithNames(int $id): ?array
+    {
+        return $this->fetchOne(
+            'SELECT p.*, d.name AS distributor_name
+               FROM payments p
+          LEFT JOIN distributors d ON d.id = p.distributor_id
+              WHERE p.id = ?',
+            [$id]
+        );
+    }
+
     public function create(array $data): int
     {
         return $this->insert('payments', $data);

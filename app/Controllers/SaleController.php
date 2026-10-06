@@ -47,6 +47,23 @@ final class SaleController extends Controller
         ]);
     }
 
+    /** Printable receipt (وصل) for one sale. */
+    public function receipt(Request $request): void
+    {
+        $this->requireAuth();
+
+        $id = (int)$request->input('id', 0);
+        $sale = $id > 0 ? (new Sale())->findWithNames($id) : null;
+        if (!$sale) {
+            $this->redirect('/sales');
+        }
+
+        $this->view('sales/receipt', [
+            'sale'     => $sale,
+            'pageTitle' => 'وصل بيع #' . $id,
+        ], null);
+    }
+
     public function store(Request $request): void
     {
         $this->requireAuth();

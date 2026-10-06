@@ -86,6 +86,67 @@ final class SettingsController extends Controller
         ]);
     }
 
+    public function restore(Request $request): void
+    {
+        $this->requireAuth();
+        $this->verifyCsrf();
+
+        $render = static function (string $error, string $success): void {
+            (new self())->renderBackup($error, $success);
+        };
+
+        $file = $_FILES['backup_file'] ?? null;
+
+        if (!is_array($file) || ($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
+            $render('الرجاء اختيار ملف نسخة احتياطية (.sql).', '');
+            return;
+        }
+        if (strtolower(pathinfo((string)$file['name'], PATHINFO_EXTENSION)) !== 'sql') {
+            $render('نوع الملف غير مدعوم — يجب أن يكون ملف .sql.', '');
+            return;
+        }
+        if ((int)$file['size'] > 64 * 1024 * 1024) {
+            $render('حجم الملف كبير جداً (الحد الأقصى 64 ميجابايت).', '');
+            return;
+        }
+
+        $sql = (string)file_get_contents((string)$file['tmp_name']);
+        if (trim($sql) === '') {
+            $render('ملف النسخة الاحتياطية فارغ.', '');
+            return;
+        }
+
+        try {
+            // A dedicated connection that allows running the whole dump
+            // (DROP/CREATE/INSERT) as a single multi-statement script.
+            $dsn = 'mysql:host=' . DB_HOST . ';port=' . DB_PORT . ';dbname=' . DB_NAME . ';charset=utf8mb4';
+            $pdo = new \PDO($dsn, DB_USER, DB_PASS, [
+                \PDO::ATTR_ERRMODE                => \PDO::ERRMODE_EXCEPTION,
+                \PDO::ATTR_EMULATE_PREPARES       => false,
+                \PDO::MYSQL_ATTR_MULTI_STATEMENTS => true,
+                \PDO::ATTR_TIMEOUT                => 60,
+            ]);
+            $pdo->exec('SET FOREIGN_KEY_CHECKS=0');
+            $pdo->exec($sql);
+            $pdo->exec('SET FOREIGN_KEY_CHECKS=1');
+
+            $this->logAudit('backup_restore', 'استعادة نسخة احتياطية: ' . (string)$file['name']);
+            $render('', 'تمت استعادة النسخة الاحتياطية بنجاح.');
+        } catch (\Throwable $e) {
+            $render('فشل استعادة النسخة: ' . $e->getMessage(), '');
+        }
+    }
+
+    private function renderBackup(string $error, string $success): void
+    {
+        $this->view('settings/backup', [
+            'pageTitle' => 'النسخ الاحتياطي',
+            'active'    => 'backup',
+            'error'     => $error,
+            'success'   => $success,
+        ]);
+    }
+
     public function createBackup(Request $request): void
     {
         $this->requireAuth();
@@ -98,7 +159,7 @@ final class SettingsController extends Controller
         header('Content-Disposition: attachment; filename="prince_cards_backup_' . date('Y-m-d_His') . '.sql"');
 
         $pdo = \Database::connection();
-        $tables = $pdo->query('SHOW TABLES')->fetchAll(PDO::FETCH_COLUMN);
+        $tables = $pdo->query('SHOW TABLES')->fetchAll(\PDO::FETCH_COLUMN);
 
         echo "-- Prince Cards Backup\n-- " . date('Y-m-d H:i:s') . "\n\n";
 
@@ -108,7 +169,7 @@ final class SettingsController extends Controller
             $create = $pdo->query("SHOW CREATE TABLE `$table`")->fetch();
             echo $create['Create Table'] . ";\n\n";
 
-            $rows = $pdo->query("SELECT * FROM `$table`")->fetchAll(PDO::FETCH_ASSOC);
+            $rows = $pdo->query("SELECT * FROM `$table`")->fetchAll(\PDO::FETCH_ASSOC);
             if (empty($rows)) continue;
 
             $cols = array_keys($rows[0]);

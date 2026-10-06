@@ -125,6 +125,7 @@
                         <td><?= money($s['total']) ?></td>
                         <td><span class="badge <?= $typeBadge ?>"><?= $typeLabel ?></span></td>
                         <td class="actions-cell">
+                            <a class="btn sm" href="/sales/receipt?id=<?= (int)$s['id'] ?>" target="_blank">وصل</a>
                             <button class="btn sm primary sale-edit-btn" type="button"
                                 data-id="<?= (int)$s['id'] ?>"
                                 data-package="<?= (int)$s['package_id'] ?>"

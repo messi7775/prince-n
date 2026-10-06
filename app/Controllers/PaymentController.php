@@ -35,6 +35,23 @@ final class PaymentController extends Controller
         ]);
     }
 
+    /** Printable receipt (وصل) for one payment. */
+    public function receipt(Request $request): void
+    {
+        $this->requireAuth();
+
+        $id = (int)$request->input('id', 0);
+        $payment = $id > 0 ? (new Payment())->findWithNames($id) : null;
+        if (!$payment) {
+            $this->redirect('/payments');
+        }
+
+        $this->view('payments/receipt', [
+            'payment'   => $payment,
+            'pageTitle' => 'وصل تحصيل #' . $id,
+        ], null);
+    }
+
     public function store(Request $request): void
     {
         $this->requireAuth();

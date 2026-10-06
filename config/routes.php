@@ -12,7 +12,9 @@ return [
         '/distributors'      => ['Controllers\\DistributorController', 'index'],
         '/distributors/show' => ['Controllers\\DistributorController', 'show'],
         '/sales'             => ['Controllers\\SaleController', 'index'],
+        '/sales/receipt'     => ['Controllers\\SaleController', 'receipt'],
         '/payments'          => ['Controllers\\PaymentController', 'index'],
+        '/payments/receipt'  => ['Controllers\\PaymentController', 'receipt'],
         '/lines'             => ['Controllers\\LineController', 'index'],
         '/line-payments'     => ['Controllers\\LineController', 'payments'],
         '/expenses'          => ['Controllers\\ExpenseController', 'index'],
@@ -55,5 +57,6 @@ return [
         '/owner-withdrawals/delete' => ['Controllers\\CashController', 'deleteWithdrawal'],
         '/settings/password'  => ['Controllers\\SettingsController', 'changePassword'],
         '/backup/create'      => ['Controllers\\SettingsController', 'createBackup'],
+        '/backup/restore'     => ['Controllers\\SettingsController', 'restore'],
     ],
 ];
