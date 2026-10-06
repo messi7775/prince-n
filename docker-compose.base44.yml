@@ -1,0 +1,60 @@
+services:
+  db:
+    image: mariadb:11
+    environment:
+      MARIADB_ROOT_PASSWORD: rootpass
+      MARIADB_DATABASE: prince_full
+      MARIADB_USER: prince
+      MARIADB_PASSWORD: princepass
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+    restart: on-failure
+
+  migrate:
+    image: mariadb:11
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./:/app:ro
+    entrypoint: ["sh", "-ec"]
+    command:
+      - |
+        sed '/^USE /d' /app/database/schema.sql | mariadb -h db -u prince -pprincepass prince_full
+        mariadb -h db -u prince -pprincepass prince_full < /app/database/dev_admin_password.sql
+        echo "Schema imported and admin password set."
+    restart: "no"
+
+  web:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    ports:
+      - "3000:80"
+    volumes:
+      - ./:/var/www/html
+    environment:
+      DB_HOST: db
+      DB_NAME: prince_full
+      DB_USER: prince
+      DB_PASS: princepass
+      DB_PORT: "3306"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost/login"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 5s
+    restart: on-failure
+
+volumes:
+  db_data:
