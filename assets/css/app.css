@@ -250,6 +250,48 @@ html[data-theme="dark"] .icon-btn .moon{display:none}
   .filter-field{width:auto;min-height:auto}
 }
 
+/* ---------- Filter sheet ---------- */
+.filter-top-row{display:flex;gap:10px;align-items:stretch}
+.filter-top-row .filter-field.grow{flex:1 1 auto}
+.filter-search-only .form-grid{display:flex}
+.filter-search-only .form-grid label{align-items:center;flex-direction:row;gap:8px;flex:1}
+.filter-search-only .form-grid input{flex:1}
+.filter-toggle{position:relative;white-space:nowrap;display:inline-flex;align-items:center;gap:8px}
+.filter-toggle .filter-count{
+  background:var(--accent);color:#fff;font-size:11.5px;font-weight:800;
+  min-width:19px;height:19px;border-radius:99px;display:inline-grid;place-items:center;padding:0 5px
+}
+.filter-sheet{position:fixed;inset:0;z-index:120}
+.filter-sheet-backdrop{position:absolute;inset:0;background:rgba(5,11,23,.55);opacity:0;transition:opacity .2s}
+.filter-sheet-panel{
+  position:absolute;right:0;left:0;bottom:0;max-height:82vh;overflow-y:auto;
+  background:var(--surface);border-radius:18px 18px 0 0;border:1px solid var(--line);
+  padding:16px 18px;transform:translateY(100%);transition:transform .25s ease;
+  box-shadow:0 -12px 40px rgba(0,0,0,.25)
+}
+.filter-sheet.open .filter-sheet-backdrop{opacity:1}
+.filter-sheet.open .filter-sheet-panel{transform:translateY(0)}
+.filter-sheet-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.filter-sheet-head strong{font-size:16px}
+.filter-sheet-close{border:0;background:var(--surface-2);color:var(--text);width:32px;height:32px;border-radius:99px;font-size:18px;cursor:pointer;flex:0 0 32px}
+.filter-sheet-grid{display:flex;flex-direction:column;gap:10px}
+.filter-sheet-grid label{display:flex;flex-direction:column;gap:4px;font-size:12.5px;font-weight:600;color:var(--muted)}
+.filter-sheet-grid label input,.filter-sheet-grid label select{width:100%}
+.filter-sheet-grid.filter-sheet-flex{gap:10px}
+.filter-sheet-grid.filter-sheet-flex .filter-field{display:flex;width:100%}
+.filter-sheet-foot{display:flex;gap:8px;margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+.filter-sheet-foot .btn{flex:1}
+@media(min-width:851px){
+  .filter-sheet{display:grid;place-items:center}
+  .filter-sheet-panel{
+    position:relative;right:auto;left:auto;bottom:auto;max-width:440px;width:100%;max-height:70vh;
+    border-radius:var(--radius);transform:translateY(12px);opacity:0
+  }
+  .filter-sheet.open .filter-sheet-panel{transform:translateY(0);opacity:1}
+  .filter-sheet-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+  .filter-sheet-grid.filter-sheet-flex{grid-template-columns:1fr}
+}
+
 /* ---------- Sale total ---------- */
 .sale-total{
   padding:12px 18px;background:linear-gradient(90deg,var(--primary-soft),var(--accent-soft));
