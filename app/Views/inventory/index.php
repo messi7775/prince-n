@@ -45,7 +45,6 @@
                         </select>
                     </label>
                     <label>سعر البيع للشدة (ريال)<input name="bundle_price" id="batch-price" type="number" min="0" placeholder="افتراضي سعر الباقة"></label>
-                    <label>تكلفة الشراء (ريال)<input name="purchase_cost" type="number" min="0" placeholder="اختياري"></label>
                     <label>عدد الشدات<input name="quantity" type="number" min="1" required></label>
                     <label>ملاحظة<input name="note" placeholder="اختياري"></label>
                 </div>
@@ -61,7 +60,7 @@
         <?php else: ?>
             <table class="data-table">
                 <thead>
-                    <tr><th>التاريخ</th><th>الباقة</th><th>سعر البيع</th><th>تكلفة الشراء</th><th>الكمية</th><th>المباع</th><th>المتبقي</th><th>ملاحظة</th><th>إجراءات</th></tr>
+                    <tr><th>التاريخ</th><th>الباقة</th><th>سعر البيع</th><th>الكمية</th><th>المباع</th><th>المتبقي</th><th>ملاحظة</th><th>إجراءات</th></tr>
                 </thead>
                 <tbody>
                     <?php foreach ($items as $row): ?>
@@ -70,7 +69,6 @@
                         <td><?= ar_date($row['created_at']) ?></td>
                         <td><?= e($row['package_name']) ?></td>
                         <td><?= money($row['bundle_price']) ?></td>
-                        <td><?= !empty($row['purchase_cost']) ? money($row['purchase_cost']) : '—' ?></td>
                         <td><?= int_num($row['quantity']) ?></td>
                         <td><?= int_num($row['sold']) ?></td>
                         <td><span class="badge <?= $remaining <= 0 ? 'zero' : 'ok' ?>"><?= int_num($remaining) ?><?= $remaining < 0 ? ' (عجز)' : '' ?></span></td>
@@ -89,12 +87,11 @@
                         </td>
                     </tr>
                     <tr class="inv-form-row" id="edit-<?= (int)$row['id'] ?>" style="display:none">
-                        <td colspan="9">
+                        <td colspan="8">
                             <form method="post" action="/inventory/edit" class="inline-inv-form">
                                 <?= csrf_field() ?>
                                 <input type="hidden" name="id" value="<?= (int)$row['id'] ?>">
                                 <label>الكمية: <input name="quantity" type="number" min="0" required value="<?= (int)$row['quantity'] ?>"></label>
-                                <label>تكلفة الشراء: <input name="purchase_cost" type="number" min="0" value="<?= (int)($row['purchase_cost'] ?? 0) ?>"></label>
                                 <label>ملاحظة: <input name="note" value="<?= e($row['note'] ?? '') ?>"></label>
                                 <button class="btn sm primary" type="submit">تأكيد التعديل</button>
                                 <button class="btn sm" type="button" onclick="closeInvForm('edit-<?= (int)$row['id'] ?>')">إلغاء</button>
