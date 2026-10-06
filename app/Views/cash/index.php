@@ -6,7 +6,7 @@
         </div>
     </section>
 
-    <section class="kpi-grid" style="grid-template-columns:repeat(3,1fr)">
+    <section class="kpi-grid">
         <article class="kpi-card teal"><div class="kpi-icon">▣</div><div class="kpi-content"><span>رصيد الصندوق</span><strong><?= money($balance) ?></strong></div></article>
         <article class="kpi-card green"><div class="kpi-icon">↗</div><div class="kpi-content"><span>إجمالي المقبوضات (مطابق)</span><strong><?= money($totalIn) ?></strong></div></article>
         <article class="kpi-card pink"><div class="kpi-icon">↓</div><div class="kpi-content"><span>إجمالي المدفوعات (مطابق)</span><strong><?= money($totalOut) ?></strong></div></article>
