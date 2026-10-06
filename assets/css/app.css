@@ -22,6 +22,7 @@
   --sidebar-w:264px;--sidebar-w-collapsed:78px;
 }
 html[data-theme="dark"]{
+  color-scheme:dark;
   --bg:#0c1322;--surface:#141d31;--surface-2:#1a2540;--text:#e6ebf5;--muted:#93a1b8;
   --line:#263451;--line-2:#202c48;
   --primary:#3b82f6;--primary-hi:#5b9bff;--primary-soft:rgba(59,130,246,.14);--on-primary:#ffffff;
@@ -40,6 +41,8 @@ html,body{margin:0;min-height:100%;font-family:var(--font);background:var(--bg);
 body{line-height:1.6;font-size:15px}
 a{text-decoration:none;color:inherit}button{font:inherit}
 ::selection{background:var(--primary-soft)}
+html{color-scheme:light}
+html[data-theme="dark"]{color-scheme:dark}
 :focus-visible{outline:2px solid var(--primary);outline-offset:2px}
 
 .app-shell{min-height:100vh}
@@ -243,6 +246,8 @@ html[data-theme="dark"] .icon-btn .moon{display:none}
 .filter-field input:focus,.filter-field select:focus{outline:none;box-shadow:none}
 .filter-field input::placeholder{color:var(--muted);opacity:.7}
 .filter-field select{cursor:pointer}
+select option{background:var(--surface-2);color:var(--text)}
+.filter-sheet-grid select option,.form-grid select option{background:var(--surface-2);color:var(--text)}
 .filter-field.grow{flex:1 1 220px}
 .filter-field.date{flex:0 1 165px}
 .filter-actions{display:inline-flex;gap:8px;align-items:center;margin-inline-start:auto}
