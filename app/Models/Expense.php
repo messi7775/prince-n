@@ -12,9 +12,19 @@ final class Expense extends Model
         return $this->fetchAll('SELECT * FROM expenses ORDER BY created_at DESC');
     }
 
+    public function find(int $id): ?array
+    {
+        return $this->fetchOne('SELECT * FROM expenses WHERE id = ?', [$id]);
+    }
+
     public function create(array $data): int
     {
         return $this->insert('expenses', $data);
+    }
+
+    public function update(int $id, array $data): int
+    {
+        return $this->updateRow('expenses', $id, $data);
     }
 
     public function delete(int $id): int

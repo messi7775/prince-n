@@ -33,29 +33,39 @@ CREATE TABLE IF NOT EXISTS packages (
 ) ENGINE=InnoDB DEFAULT CHARACTER SET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ---------------------------------------------------------------------------
--- Inventory (stock batches — bundle_price captured for historical accuracy)
---   quantity = number of BUNDLES in this batch
+-- Inventory (stock BATCHES — multiple batches allowed per package)
+--   bundle_price  = sale price of one bundle at batch creation
+--   purchase_cost = purchase cost of the batch (informational only, optional)
+--   quantity      = bundles received in this batch
+--   sold          = bundles sold from this batch (tracked via sale_allocations)
+--   remaining     = quantity - sold (always computed, never stored)
 -- ---------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS inventory (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     package_id INT UNSIGNED NOT NULL,
     quantity INT NOT NULL DEFAULT 0,
+    sold INT NOT NULL DEFAULT 0,
     bundle_price INT NOT NULL DEFAULT 0,
+    purchase_cost INT NULL,
     status ENUM('active','closed') NOT NULL DEFAULT 'active',
     note VARCHAR(255) NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE KEY uq_inventory_package (package_id),
+    KEY idx_inventory_package (package_id),
     CONSTRAINT fk_inventory_package
         FOREIGN KEY (package_id) REFERENCES packages(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARACTER SET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ---------------------------------------------------------------------------
--- Inventory movements (log of add/edit/delete operations on stock)
+-- Inventory movements (log of stock operations: add/edit/delete/ sale / return)
+--   inventory_id = the batch the movement touched (NULL for legacy rows)
+--   For add/edit/delete rows the quantities are BATCH quantities;
+--   for sale/sale_delete/return rows they are REMAINING quantities.
 -- ---------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS inventory_movements (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     package_id INT UNSIGNED NOT NULL,
-    action ENUM('add','edit','delete') NOT NULL,
+    inventory_id INT UNSIGNED NULL,
+    action ENUM('add','edit','delete','sale','sale_delete','return') NOT NULL,
     old_quantity INT NOT NULL DEFAULT 0,
     new_quantity INT NOT NULL DEFAULT 0,
     bundle_price INT NOT NULL DEFAULT 0,
@@ -100,6 +110,21 @@ CREATE TABLE IF NOT EXISTS sales (
         FOREIGN KEY (distributor_id) REFERENCES distributors(id) ON DELETE SET NULL,
     CONSTRAINT fk_sale_package
         FOREIGN KEY (package_id) REFERENCES packages(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARACTER SET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ---------------------------------------------------------------------------
+-- Sale allocations — which inventory batches each sale consumed (FIFO).
+-- Keeps inventory quantities exact after every sale / edit / delete.
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS sale_allocations (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    sale_id INT UNSIGNED NOT NULL,
+    inventory_id INT UNSIGNED NOT NULL,
+    bundles INT NOT NULL DEFAULT 0,
+    CONSTRAINT fk_alloc_sale
+        FOREIGN KEY (sale_id) REFERENCES sales(id) ON DELETE CASCADE,
+    CONSTRAINT fk_alloc_inventory
+        FOREIGN KEY (inventory_id) REFERENCES inventory(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARACTER SET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ---------------------------------------------------------------------------

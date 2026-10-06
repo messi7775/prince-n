@@ -33,9 +33,30 @@
     </section>
 
     <section class="dashboard-panel">
-        <div class="section-title"><h3>سجل تسديدات الخطوط</h3><span>▭</span></div>
+        <div class="section-title"><h3>البحث والفلترة</h3><span>⌕</span></div>
+        <form method="get" action="/line-payments" class="entity-form">
+            <div class="form-grid">
+                <label>بحث<input type="text" name="q" value="<?= e($filters['q']) ?>" placeholder="خط / ملاحظة"></label>
+                <label>الخط
+                    <select name="line_id">
+                        <option value="">الكل</option>
+                        <?php foreach ($lines as $l): ?>
+                            <option value="<?= (int)$l['id'] ?>" <?= $filters['line_id'] === (int)$l['id'] ? 'selected' : '' ?>><?= e($l['name']) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </label>
+                <label>من تاريخ<input type="date" name="date_from" value="<?= e($filters['date_from']) ?>"></label>
+                <label>إلى تاريخ<input type="date" name="date_to" value="<?= e($filters['date_to']) ?>"></label>
+            </div>
+            <button class="btn primary" type="submit">تطبيق</button>
+            <a class="btn" href="/line-payments">مسح الفلاتر</a>
+        </form>
+    </section>
+
+    <section class="dashboard-panel">
+        <div class="section-title"><h3>سجل تسديدات الخطوط (<?= money($total) ?>)</h3><span>▭</span></div>
         <?php if (empty($payments)): ?>
-            <div class="empty-state">لا توجد تسديدات حتى الآن</div>
+            <div class="empty-state">لا توجد تسديدات مطابقة</div>
         <?php else: ?>
             <table class="data-table">
                 <thead>

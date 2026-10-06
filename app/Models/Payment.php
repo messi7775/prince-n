@@ -46,4 +46,46 @@ final class Payment extends Model
     {
         return $this->fetchInt('SELECT COALESCE(SUM(amount), 0) FROM payments');
     }
+
+    /** Collections with search + filters (distributor, date range). */
+    public function search(array $filters = []): array
+    {
+        $where  = [];
+        $params = [];
+
+        $q = trim((string)($filters['q'] ?? ''));
+        if ($q !== '') {
+            $where[] = '(d.name LIKE :q OR p.note LIKE :q)';
+            $params['q'] = '%' . $q . '%';
+        }
+
+        $distributorId = (int)($filters['distributor_id'] ?? 0);
+        if ($distributorId > 0) {
+            $where[] = 'p.distributor_id = :distributor_id';
+            $params['distributor_id'] = $distributorId;
+        }
+
+        $dateFrom = trim((string)($filters['date_from'] ?? ''));
+        if ($dateFrom !== '' && preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateFrom)) {
+            $where[] = 'p.created_at >= :date_from';
+            $params['date_from'] = $dateFrom . ' 00:00:00';
+        }
+
+        $dateTo = trim((string)($filters['date_to'] ?? ''));
+        if ($dateTo !== '' && preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateTo)) {
+            $where[] = 'p.created_at <= :date_to';
+            $params['date_to'] = $dateTo . ' 23:59:59';
+        }
+
+        $whereSql = $where !== [] ? 'WHERE ' . implode(' AND ', $where) : '';
+
+        return $this->fetchAll(
+            "SELECT p.*, d.name AS distributor_name
+               FROM payments p
+          LEFT JOIN distributors d ON d.id = p.distributor_id
+              $whereSql
+              ORDER BY p.created_at DESC, p.id DESC",
+            $params
+        );
+    }
 }

@@ -19,15 +19,16 @@
         <?php else: ?>
             <table class="data-table">
                 <thead>
-                    <tr><th>التاريخ</th><th>الاتجاه</th><th>المبلغ</th><th>السبب</th><th>المرجع</th></tr>
+                    <tr><th>التاريخ</th><th>نوع الحركة</th><th>البيان</th><th>المبلغ</th><th>الرصيد بعد الحركة</th><th>المرجع</th></tr>
                 </thead>
                 <tbody>
                     <?php foreach ($movements as $m): ?>
                     <tr>
                         <td><?= ar_date($m['created_at']) ?></td>
-                        <td><span class="badge <?= $m['direction'] === 'in' ? 'ok' : 'zero' ?>"><?= $m['direction'] === 'in' ? 'وارد' : 'صادر' ?></span></td>
-                        <td style="color:<?= $m['direction'] === 'in' ? '#18a078' : '#e6466a' ?>"><?= money($m['amount']) ?></td>
+                        <td><span class="badge <?= $m['direction'] === 'in' ? 'ok' : 'zero' ?>"><?= $m['direction'] === 'in' ? 'دخول' : 'خروج' ?></span></td>
                         <td><?= e($m['reason']) ?></td>
+                        <td style="color:<?= $m['direction'] === 'in' ? '#18a078' : '#e6466a' ?>"><?= money($m['amount']) ?></td>
+                        <td><strong><?= money($m['running']) ?></strong></td>
                         <td><?= e($m['reference_type'] ?? '') ?></td>
                     </tr>
                     <?php endforeach; ?>

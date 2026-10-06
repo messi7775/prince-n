@@ -15,7 +15,7 @@ final class CashController extends Controller
         $this->requireAuth();
 
         $cash = new CashMovement();
-        $movements = $cash->all(500);
+        $movements = $cash->allWithRunningBalance();
         $balance   = $cash->balance();
         $totalIn   = $cash->totalIn();
         $totalOut  = $cash->totalOut();
@@ -82,6 +82,57 @@ final class CashController extends Controller
 
         $this->logAudit('owner_withdrawal', 'سحب المالك: ' . $amount, $data);
 
+        $this->redirect('/owner-withdrawals');
+    }
+
+    /** Edit an owner withdrawal; its cash movement (OUT) follows atomically. */
+    public function updateWithdrawal(Request $request): void
+    {
+        $this->requireAuth();
+        $this->verifyCsrf();
+
+        $id = (int)$request->input('id', 0);
+        $withdrawal = new OwnerWithdrawal();
+        $old = $id > 0 ? $withdrawal->find($id) : null;
+        if (!$old) {
+            $this->redirect('/owner-withdrawals');
+        }
+
+        $amount = (int)$request->input('amount', 0);
+        $note   = (string)$request->input('note', '');
+
+        if ($amount <= 0) {
+            $this->redirect('/owner-withdrawals');
+        }
+
+        $data = ['amount' => $amount, 'note' => $note ?: null];
+
+        $db = \Database::connection();
+        try {
+            $db->beginTransaction();
+            $withdrawal->update($id, $data);
+
+            $cash = new CashMovement();
+            $updated = $cash->updateAmountByReference('owner_withdrawal', $id, $amount);
+            if ($updated === 0) {
+                $cash->create([
+                    'direction'      => CashMovement::OUT,
+                    'amount'         => $amount,
+                    'reason'         => 'سحب المالك',
+                    'reference_type' => 'owner_withdrawal',
+                    'reference_id'   => $id,
+                ]);
+            } else {
+                $cash->updateByReference('owner_withdrawal', $id, $amount, CashMovement::OUT, 'سحب المالك');
+            }
+
+            $db->commit();
+        } catch (\Throwable $e) {
+            if ($db->inTransaction()) { $db->rollBack(); }
+            throw $e;
+        }
+
+        $this->logAudit('owner_withdrawal_update', 'تعديل سحب #' . $id . ': من ' . $old['amount'] . ' إلى ' . $amount, ['old' => $old, 'new' => $data]);
         $this->redirect('/owner-withdrawals');
     }
 

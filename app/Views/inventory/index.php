@@ -2,12 +2,15 @@
     <section class="dashboard-title">
         <div>
             <h2>المخزون</h2>
-            <p>إدارة مخزون الباقات — كل باقة لها سجل واحد تلقائيًا</p>
+            <p>إدارة دفعات المخزون — كل باقة يمكن أن يكون لها عدة دفعات</p>
         </div>
     </section>
 
-    <?php if (!empty($error)): ?>
-        <div class="alert error"><?= e($error) ?></div>
+    <?php $flashError = \Session::flashGet('error'); ?>
+    <?php if ($flashError): ?>
+        <div class="dashboard-panel alert-panel">
+            <div class="alert-message" style="color:#e11d48; font-weight:bold; padding:12px 16px;">⚠ <?= e($flashError) ?></div>
+        </div>
     <?php endif; ?>
 
     <?php if (!empty($lowStock)): ?>
@@ -28,29 +31,56 @@
     <?php endif; ?>
 
     <section class="dashboard-panel">
-        <div class="section-title"><h3>المخزون</h3><span>♧</span></div>
+        <details class="form-collapse">
+            <summary class="btn primary">+ دفعة مخزون جديدة</summary>
+            <form method="post" action="/inventory/store" class="entity-form">
+                <?= csrf_field() ?>
+                <div class="form-grid">
+                    <label>الباقة
+                        <select name="package_id" id="batch-package" required>
+                            <option value="">— اختر —</option>
+                            <?php foreach ($packages as $p): ?>
+                                <option value="<?= (int)$p['id'] ?>" data-bundle-price="<?= (int)$p['bundle_price'] ?>"><?= e($p['name']) ?> — شدة <?= money($p['bundle_price']) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </label>
+                    <label>سعر البيع للشدة (ريال)<input name="bundle_price" id="batch-price" type="number" min="0" placeholder="افتراضي سعر الباقة"></label>
+                    <label>تكلفة الشراء (ريال)<input name="purchase_cost" type="number" min="0" placeholder="اختياري"></label>
+                    <label>عدد الشدات<input name="quantity" type="number" min="1" required></label>
+                    <label>ملاحظة<input name="note" placeholder="اختياري"></label>
+                </div>
+                <button class="btn primary" type="submit">إضافة الدفعة</button>
+            </form>
+        </details>
+    </section>
+
+    <section class="dashboard-panel">
+        <div class="section-title"><h3>دفعات المخزون</h3><span>♧</span></div>
         <?php if (empty($items)): ?>
-            <div class="empty-state">لا يوجد مخزون — أضف باقات جديدة من صفحة الباقات</div>
+            <div class="empty-state">لا يوجد مخزون — أضف دفعة جديدة</div>
         <?php else: ?>
             <table class="data-table">
                 <thead>
-                    <tr><th>الباقة</th><th>عدد الشدات</th><th>سعر الشدة</th><th>القيمة</th><th>إجراءات</th></tr>
+                    <tr><th>التاريخ</th><th>الباقة</th><th>سعر البيع</th><th>تكلفة الشراء</th><th>الكمية</th><th>المباع</th><th>المتبقي</th><th>ملاحظة</th><th>إجراءات</th></tr>
                 </thead>
                 <tbody>
                     <?php foreach ($items as $row): ?>
+                    <?php $remaining = (int)$row['remaining']; ?>
                     <tr>
+                        <td><?= ar_date($row['created_at']) ?></td>
                         <td><?= e($row['package_name']) ?></td>
-                        <td><?= int_num($row['quantity']) ?><?= (int)$row['quantity'] < 0 ? ' (عجز)' : '' ?></td>
                         <td><?= money($row['bundle_price']) ?></td>
-                        <td><?= money($row['quantity'] * $row['bundle_price']) ?></td>
+                        <td><?= !empty($row['purchase_cost']) ? money($row['purchase_cost']) : '—' ?></td>
+                        <td><?= int_num($row['quantity']) ?></td>
+                        <td><?= int_num($row['sold']) ?></td>
+                        <td><span class="badge <?= $remaining <= 0 ? 'zero' : 'ok' ?>"><?= int_num($remaining) ?><?= $remaining < 0 ? ' (عجز)' : '' ?></span></td>
+                        <td><?= e($row['note'] ?? '') ?></td>
                         <td class="actions-cell">
                             <div class="action-buttons">
                                 <button class="btn sm primary" type="button"
-                                    onclick="openInvForm('add-<?= (int)$row['id'] ?>')">إضافة</button>
-                                <button class="btn sm" type="button"
                                     onclick="openInvForm('edit-<?= (int)$row['id'] ?>')">تعديل</button>
                                 <form method="post" action="/inventory/delete" class="inline-form"
-                                    onsubmit="return confirm('حذف سجل المخزون لهذه الباقة؟')">
+                                    onsubmit="return confirm('حذف هذه الدفعة؟')">
                                     <?= csrf_field() ?>
                                     <input type="hidden" name="id" value="<?= (int)$row['id'] ?>">
                                     <button class="btn sm danger" type="submit">حذف</button>
@@ -58,23 +88,14 @@
                             </div>
                         </td>
                     </tr>
-                    <tr class="inv-form-row" id="add-<?= (int)$row['id'] ?>" style="display:none">
-                        <td colspan="5">
-                            <form method="post" action="/inventory/add" class="inline-inv-form">
-                                <?= csrf_field() ?>
-                                <input type="hidden" name="id" value="<?= (int)$row['id'] ?>">
-                                <label>عدد الشدات المضافة: <input name="quantity" type="number" min="1" required placeholder="عدد الشدات"></label>
-                                <button class="btn sm primary" type="submit">تأكيد الإضافة</button>
-                                <button class="btn sm" type="button" onclick="closeInvForm('add-<?= (int)$row['id'] ?>')">إلغاء</button>
-                            </form>
-                        </td>
-                    </tr>
                     <tr class="inv-form-row" id="edit-<?= (int)$row['id'] ?>" style="display:none">
-                        <td colspan="5">
+                        <td colspan="9">
                             <form method="post" action="/inventory/edit" class="inline-inv-form">
                                 <?= csrf_field() ?>
                                 <input type="hidden" name="id" value="<?= (int)$row['id'] ?>">
-                                <label>العدد الجديد: <input name="quantity" type="number" min="0" required value="<?= (int)$row['quantity'] ?>"></label>
+                                <label>الكمية: <input name="quantity" type="number" min="0" required value="<?= (int)$row['quantity'] ?>"></label>
+                                <label>تكلفة الشراء: <input name="purchase_cost" type="number" min="0" value="<?= (int)($row['purchase_cost'] ?? 0) ?>"></label>
+                                <label>ملاحظة: <input name="note" value="<?= e($row['note'] ?? '') ?>"></label>
                                 <button class="btn sm primary" type="submit">تأكيد التعديل</button>
                                 <button class="btn sm" type="button" onclick="closeInvForm('edit-<?= (int)$row['id'] ?>')">إلغاء</button>
                             </form>
@@ -96,10 +117,11 @@
                     <tr>
                         <th>التاريخ والوقت</th>
                         <th>الباقة</th>
+                        <th>الدفعة</th>
                         <th>نوع الحركة</th>
-                        <th>العدد السابق</th>
-                        <th>العدد المضاف/الجديد</th>
-                        <th>العدد بعد الحركة</th>
+                        <th>السابق</th>
+                        <th>الحركة</th>
+                        <th>بعد الحركة</th>
                         <th>سعر الشدة</th>
                         <th>القيمة</th>
                         <th>الملاحظة</th>
@@ -110,22 +132,33 @@
                     <tr>
                         <td><?= e($m['created_at']) ?></td>
                         <td><?= e($m['package_name']) ?></td>
+                        <td><?= $m['inventory_id'] !== null ? '#' . (int)$m['inventory_id'] : '—' ?></td>
                         <td>
                             <?php
-                                $labels  = ['add' => 'إضافة', 'edit' => 'تعديل', 'delete' => 'حذف'];
-                                $classes = ['add' => 'ok', 'edit' => '', 'delete' => 'zero'];
+                                $labels  = [
+                                    'add'         => 'إضافة مخزون',
+                                    'edit'        => 'تعديل',
+                                    'delete'      => 'حذف',
+                                    'sale'        => 'بيع',
+                                    'sale_delete' => 'حذف بيع',
+                                    'return'      => 'إرجاع/تصحيح',
+                                ];
+                                $classes = [
+                                    'add'         => 'ok',
+                                    'edit'        => '',
+                                    'delete'      => 'zero',
+                                    'sale'        => 'low',
+                                    'sale_delete' => 'ok',
+                                    'return'      => '',
+                                ];
                             ?>
-                            <span class="badge <?= $classes[$m['action']] ?? '' ?>"><?= $labels[$m['action']] ?? $m['action'] ?></span>
+                            <span class="badge <?= $classes[$m['action']] ?? '' ?>"><?= $labels[$m['action']] ?? e($m['action']) ?></span>
                         </td>
                         <td><?= int_num($m['old_quantity']) ?></td>
                         <td>
                             <?php
                                 $diff = (int)$m['new_quantity'] - (int)$m['old_quantity'];
-                                if ($m['action'] === 'edit') {
-                                    echo int_num($m['new_quantity']);
-                                } else {
-                                    echo ($diff >= 0 ? '+' : '') . int_num(abs($diff)) . ($diff >= 0 ? '' : ' (حذف)');
-                                }
+                                echo ($diff >= 0 ? '+' : '') . int_num($diff);
                             ?>
                         </td>
                         <td><?= int_num($m['new_quantity']) ?></td>
@@ -150,4 +183,15 @@ function closeInvForm(id) {
     var el = document.getElementById(id);
     if (el) el.style.display = 'none';
 }
+(function() {
+    var pkg = document.getElementById('batch-package');
+    var price = document.getElementById('batch-price');
+    if (pkg && price) {
+        pkg.addEventListener('change', function() {
+            var opt = pkg.options[pkg.selectedIndex];
+            var bp = opt.getAttribute('data-bundle-price');
+            if (bp) price.value = bp;
+        });
+    }
+})();
 </script>

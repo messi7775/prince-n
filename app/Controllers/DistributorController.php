@@ -10,6 +10,41 @@ use Models\AuditLog;
 
 final class DistributorController extends Controller
 {
+    /** ملف الموزع + كشف الحساب (التاريخ | نوع الحركة | البيان | مدين | دائن | الرصيد) */
+    public function show(Request $request): void
+    {
+        $this->requireAuth();
+
+        $id = (int)$request->input('id', 0);
+        $distributor = $id > 0 ? (new Distributor())->find($id) : null;
+        if ($distributor === null) {
+            $this->notFound();
+        }
+
+        $filters = [
+            'date_from' => (string)$request->input('date_from', ''),
+            'date_to'   => (string)$request->input('date_to', ''),
+            'type'      => (string)$request->input('type', ''),
+        ];
+
+        $model = new Distributor();
+        $statement = $model->statement($id, $filters);
+
+        $this->view('distributors/show', [
+            'pageTitle'    => 'كشف حساب: ' . $distributor['name'],
+            'active'       => 'distributors',
+            'distributor'  => $distributor,
+            'filters'      => $filters,
+            'ledger'       => $statement['ledger'],
+            'salesTotal'   => $statement['sales_total'],
+            'paymentsTotal'=> $statement['payments_total'],
+            'finalBalance' => $statement['final_balance'],
+            'lastActivity' => $model->lastActivity($id),
+            'creditTotal'  => $model->creditTotal($id),
+            'paidTotal'    => $model->paidTotal($id),
+        ]);
+    }
+
     public function index(Request $request): void
     {
         $this->requireAuth();

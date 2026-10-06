@@ -31,9 +31,30 @@
     </section>
 
     <section class="dashboard-panel">
-        <div class="section-title"><h3>سجل التحصيلات</h3><span>♣</span></div>
+        <div class="section-title"><h3>البحث والفلترة</h3><span>⌕</span></div>
+        <form method="get" action="/payments" class="entity-form">
+            <div class="form-grid">
+                <label>بحث<input type="text" name="q" value="<?= e($filters['q']) ?>" placeholder="موزع / ملاحظة"></label>
+                <label>الموزع
+                    <select name="distributor_id">
+                        <option value="">الكل</option>
+                        <?php foreach ($distributors as $d): ?>
+                            <option value="<?= (int)$d['id'] ?>" <?= $filters['distributor_id'] === (int)$d['id'] ? 'selected' : '' ?>><?= e($d['name']) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </label>
+                <label>من تاريخ<input type="date" name="date_from" value="<?= e($filters['date_from']) ?>"></label>
+                <label>إلى تاريخ<input type="date" name="date_to" value="<?= e($filters['date_to']) ?>"></label>
+            </div>
+            <button class="btn primary" type="submit">تطبيق</button>
+            <a class="btn" href="/payments">مسح الفلاتر</a>
+        </form>
+    </section>
+
+    <section class="dashboard-panel">
+        <div class="section-title"><h3>سجل التحصيلات (<?= money($total) ?>)</h3><span>♣</span></div>
         <?php if (empty($payments)): ?>
-            <div class="empty-state">لا توجد تحصيلات حتى الآن</div>
+            <div class="empty-state">لا توجد تحصيلات مطابقة</div>
         <?php else: ?>
             <table class="data-table">
                 <thead>

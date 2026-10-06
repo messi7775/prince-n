@@ -67,6 +67,62 @@ final class ExpenseController extends Controller
         $this->redirect('/expenses');
     }
 
+    /** Edit an expense; its cash movement (OUT) follows atomically. */
+    public function update(Request $request): void
+    {
+        $this->requireAuth();
+        $this->verifyCsrf();
+
+        $id = (int)$request->input('id', 0);
+        $expense = new Expense();
+        $old = $id > 0 ? $expense->find($id) : null;
+        if (!$old) {
+            $this->redirect('/expenses');
+        }
+
+        $category = (string)$request->input('category', '');
+        $amount   = (int)$request->input('amount', 0);
+        $note     = (string)$request->input('note', '');
+
+        if ($category === '' || $amount <= 0) {
+            $this->redirect('/expenses');
+        }
+
+        $data = [
+            'category' => $category,
+            'amount'   => $amount,
+            'note'     => $note ?: null,
+        ];
+
+        $db = \Database::connection();
+        try {
+            $db->beginTransaction();
+            $expense->update($id, $data);
+
+            $cash = new CashMovement();
+            $updated = $cash->updateAmountByReference('expense', $id, $amount);
+            if ($updated === 0) {
+                $cash->create([
+                    'direction'      => CashMovement::OUT,
+                    'amount'         => $amount,
+                    'reason'         => 'مصروف: ' . $category,
+                    'reference_type' => 'expense',
+                    'reference_id'   => $id,
+                ]);
+            } else {
+                $cash->updateByReference('expense', $id, $amount, CashMovement::OUT, 'مصروف: ' . $category);
+            }
+
+            $db->commit();
+        } catch (\Throwable $e) {
+            if ($db->inTransaction()) { $db->rollBack(); }
+            throw $e;
+        }
+
+        $this->logAudit('expense_update', 'تعديل مصروف #' . $id . ': ' . $old['category'] . ' ' . $old['amount'] . ' → ' . $category . ' ' . $amount, ['old' => $old, 'new' => $data]);
+        $this->redirect('/expenses');
+    }
+
     public function delete(Request $request): void
     {
         $this->requireAuth();

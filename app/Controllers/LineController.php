@@ -14,11 +14,12 @@ final class LineController extends Controller
     {
         $this->requireAuth();
         $line = new Line();
-        $lines = $line->all();
+        $lines = $line->all(['q' => (string)$request->input('q', '')]);
         $this->view('lines/index', [
             'pageTitle' => 'الخطوط',
             'active'    => 'lines',
             'lines'     => $lines,
+            'q'         => (string)$request->input('q', ''),
         ]);
     }
 
@@ -85,12 +86,21 @@ final class LineController extends Controller
         $db->exec("UPDATE line_payments SET direction = 'out' WHERE direction <> 'out'");
         $db->exec("UPDATE cash_movements SET direction = 'out', reason = 'دفع خط' WHERE reference_type = 'line_payment' AND direction <> 'out'");
 
-        $payments = $line->allPayments();
+        $filters = [
+            'q'         => (string)$request->input('q', ''),
+            'line_id'   => (int)$request->input('line_id', 0),
+            'date_from' => (string)$request->input('date_from', ''),
+            'date_to'   => (string)$request->input('date_to', ''),
+        ];
+
+        $payments = $line->allPayments($filters);
         $this->view('lines/payments', [
             'pageTitle' => 'تسديد الخطوط',
             'active'    => 'line-payments',
             'lines'     => $lines,
             'payments'  => $payments,
+            'total'     => array_sum(array_map(static fn ($p) => (int)$p['amount'], $payments)),
+            'filters'   => $filters,
         ]);
     }
 
@@ -169,7 +179,8 @@ final class LineController extends Controller
                 $db = \Database::connection();
                 try {
                     $db->beginTransaction();
-                    (new CashMovement())->deleteByLineId($id);
+                    // Remove ONLY this payment's cash movement (a line has many payments).
+                    (new CashMovement())->deleteByReference('line_payment', $id);
                     $line->deletePayment($id);
                     $db->commit();
                 } catch (\Throwable $e) {

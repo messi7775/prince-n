@@ -7,13 +7,26 @@ use Model;
 
 final class Line extends Model
 {
-    public function all(): array
+    public function all(array $filters = []): array
     {
+        $where  = [];
+        $params = [];
+
+        $q = trim((string)($filters['q'] ?? ''));
+        if ($q !== '') {
+            $where[] = '(l.name LIKE :q OR l.provider LIKE :q OR l.note LIKE :q)';
+            $params['q'] = '%' . $q . '%';
+        }
+
+        $whereSql = $where !== [] ? 'WHERE ' . implode(' AND ', $where) : '';
+
         return $this->fetchAll(
             "SELECT l.*,
                     COALESCE((SELECT -SUM(lp.amount) FROM line_payments lp WHERE lp.line_id = l.id), 0) AS balance
                FROM `lines` l
-              ORDER BY l.created_at DESC"
+              $whereSql
+              ORDER BY l.created_at DESC",
+            $params
         );
     }
 
@@ -50,13 +63,44 @@ final class Line extends Model
         );
     }
 
-    public function allPayments(): array
+    public function allPayments(array $filters = []): array
     {
+        $where  = [];
+        $params = [];
+
+        $q = trim((string)($filters['q'] ?? ''));
+        if ($q !== '') {
+            $where[] = '(l.name LIKE :q OR lp.note LIKE :q)';
+            $params['q'] = '%' . $q . '%';
+        }
+
+        $lineId = (int)($filters['line_id'] ?? 0);
+        if ($lineId > 0) {
+            $where[] = 'lp.line_id = :line_id';
+            $params['line_id'] = $lineId;
+        }
+
+        $dateFrom = trim((string)($filters['date_from'] ?? ''));
+        if ($dateFrom !== '' && preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateFrom)) {
+            $where[] = 'lp.created_at >= :date_from';
+            $params['date_from'] = $dateFrom . ' 00:00:00';
+        }
+
+        $dateTo = trim((string)($filters['date_to'] ?? ''));
+        if ($dateTo !== '' && preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateTo)) {
+            $where[] = 'lp.created_at <= :date_to';
+            $params['date_to'] = $dateTo . ' 23:59:59';
+        }
+
+        $whereSql = $where !== [] ? 'WHERE ' . implode(' AND ', $where) : '';
+
         return $this->fetchAll(
             "SELECT lp.*, l.name AS line_name
                FROM line_payments lp
                JOIN `lines` l ON l.id = lp.line_id
-              ORDER BY lp.created_at DESC"
+              $whereSql
+              ORDER BY lp.created_at DESC, lp.id DESC",
+            $params
         );
     }
 

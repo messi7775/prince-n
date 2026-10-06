@@ -22,6 +22,24 @@ final class CashMovement extends Model
         return $this->insert('cash_movements', $data);
     }
 
+    /**
+     * All movements with a running balance computed from the actual rows
+     * (oldest first), newest displayed last. Used by the cash page.
+     */
+    public function allWithRunningBalance(): array
+    {
+        $rows = $this->fetchAll('SELECT * FROM cash_movements ORDER BY id ASC');
+
+        $balance = 0;
+        foreach ($rows as &$row) {
+            $balance += $row['direction'] === 'in' ? (int)$row['amount'] : -(int)$row['amount'];
+            $row['running'] = $balance;
+        }
+        unset($row);
+
+        return array_reverse($rows);
+    }
+
     public function balance(): int
     {
         $in  = $this->fetchInt("SELECT COALESCE(SUM(amount), 0) FROM cash_movements WHERE direction = 'in'");

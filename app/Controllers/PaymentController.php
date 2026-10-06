@@ -15,15 +15,22 @@ final class PaymentController extends Controller
     {
         $this->requireAuth();
 
-        $payment = new Payment();
-        $payments = $payment->all();
+        $filters = [
+            'q'              => (string)$request->input('q', ''),
+            'distributor_id' => (int)$request->input('distributor_id', 0),
+            'date_from'      => (string)$request->input('date_from', ''),
+            'date_to'        => (string)$request->input('date_to', ''),
+        ];
 
         $distributors = (new Distributor())->all();
+        $payments = (new Payment())->search($filters);
 
         $this->view('payments/index', [
             'pageTitle'    => 'التحصيلات',
             'active'       => 'payments',
             'payments'     => $payments,
+            'total'        => array_sum(array_map(static fn ($p) => (int)$p['amount'], $payments)),
+            'filters'      => $filters,
             'distributors' => $distributors,
         ]);
     }

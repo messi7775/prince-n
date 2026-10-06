@@ -23,6 +23,17 @@
     </section>
 
     <section class="dashboard-panel">
+        <div class="section-title"><h3>البحث والفلترة</h3><span>⌕</span></div>
+        <form method="get" action="/lines" class="entity-form">
+            <div class="form-grid">
+                <label>بحث<input type="text" name="q" value="<?= e($q ?? '') ?>" placeholder="اسم الخط / المزود"></label>
+            </div>
+            <button class="btn primary" type="submit">بحث</button>
+            <a class="btn" href="/lines">مسح</a>
+        </form>
+    </section>
+
+    <section class="dashboard-panel">
         <div class="section-title"><h3>قائمة الخطوط</h3><span>⌁</span></div>
         <?php if (empty($lines)): ?>
             <div class="empty-state">لا توجد خطوط حتى الآن</div>

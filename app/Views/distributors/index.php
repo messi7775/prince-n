@@ -47,6 +47,7 @@
                         <td><?= money($d['paid_total']) ?></td>
                         <td><span class="badge <?= $balance > 0 ? 'zero' : 'ok' ?>"><?= money($balance) ?><?php if ($balance < 0): ?> — رصيد للموزع<?php elseif ($balance > 0): ?> — مستحق علينا<?php else: ?> — متعادل<?php endif; ?></span></td>
                         <td class="actions-cell">
+                            <a class="btn sm" href="/distributors/show?id=<?= (int)$d['id'] ?>">كشف الحساب</a>
                             <form method="post" action="/distributors/delete" class="inline-form" onsubmit="return confirm('حذف هذا الموزع؟')">
                                 <?= csrf_field() ?>
                                 <input type="hidden" name="id" value="<?= (int)$d['id'] ?>">
