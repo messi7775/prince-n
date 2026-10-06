@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <title><?= e($pageTitle) ?> | شبكة البرنس</title>
-<link rel="stylesheet" href="/assets/css/app.css?v=<?= filemtime(__DIR__ . "/../../assets/css/app.css") ?>">
+<link rel="stylesheet" href="/assets/css/app.css?v=<?= filemtime(dirname(__DIR__, 3) . "/assets/css/app.css") ?>">
 <style>
     body { background: #fff; }
     .receipt-wrap { max-width: 640px; margin: 24px auto; }

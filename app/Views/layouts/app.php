@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap">
-    <link rel="stylesheet" href="/assets/css/app.css?v=<?= filemtime(__DIR__ . '/../../assets/css/app.css') ?>">
+    <link rel="stylesheet" href="/assets/css/app.css?v=<?= filemtime(dirname(__DIR__, 3) . '/assets/css/app.css') ?>">
     <script>
         (function () {
             try {
@@ -46,6 +46,6 @@
         </nav>
     </main>
 </div>
-<script src="/assets/js/app.js?v=<?= filemtime(__DIR__ . '/../../assets/js/app.js') ?>"></script>
+<script src="/assets/js/app.js?v=<?= filemtime(dirname(__DIR__, 3) . '/assets/js/app.js') ?>"></script>
 </body>
 </html>
