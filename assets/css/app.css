@@ -137,6 +137,9 @@ html[data-theme="dark"] .icon-btn .moon{display:none}
 
 /* ---------- KPI cards ---------- */
 .kpi-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:18px}
+.kpi-grid.cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.kpi-grid.cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.kpi-grid.cols-4{grid-template-columns:repeat(4,minmax(0,1fr))}
 .kpi-card{
   min-height:94px;border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;
   display:flex;align-items:center;gap:12px;box-shadow:var(--shadow-sm);background:var(--surface);
@@ -488,7 +491,7 @@ select option{background:var(--surface-2);color:var(--text)}
   .mobile-only{display:grid}
   .dashboard{padding:16px 13px}
   .dashboard-title h2{font-size:22px}
-  .kpi-grid{grid-template-columns:repeat(2,1fr);gap:8px}
+  .kpi-grid,.kpi-grid.cols-2,.kpi-grid.cols-3,.kpi-grid.cols-4{grid-template-columns:repeat(2,1fr);gap:8px}
   .kpi-card{min-height:84px;padding:10px 12px}
   .kpi-icon{width:40px;height:40px;flex-basis:40px;font-size:19px}
   .kpi-content strong{font-size:19px}
@@ -509,7 +512,7 @@ select option{background:var(--surface-2);color:var(--text)}
   .form-grid{grid-template-columns:repeat(2,1fr)}
 }
 @media(max-width:480px){
-  .kpi-grid{grid-template-columns:1fr}
+  .kpi-grid,.kpi-grid.cols-2,.kpi-grid.cols-3,.kpi-grid.cols-4{grid-template-columns:1fr}
   .form-grid{grid-template-columns:1fr}
   .data-table{display:block;overflow-x:auto;white-space:nowrap}
 }

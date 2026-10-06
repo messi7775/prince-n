@@ -7,7 +7,7 @@
         <a class="btn" href="/distributors">← رجوع للموزعين</a>
     </section>
 
-    <section class="kpi-grid" style="grid-template-columns:repeat(4,1fr)">
+    <section class="kpi-grid cols-4">
         <article class="kpi-card blue"><div class="kpi-icon">♙</div><div class="kpi-content"><span>الموزع</span><strong><?= e($distributor['name']) ?></strong></div></article>
         <article class="kpi-card violet"><div class="kpi-icon">☎</div><div class="kpi-content"><span>الهاتف</span><strong><?= e($distributor['phone'] ?? '—') ?></strong></div></article>
         <article class="kpi-card amber"><div class="kpi-icon">⌁</div><div class="kpi-content"><span>آخر عملية</span><strong><?= $lastActivity ? ar_date($lastActivity) : '—' ?></strong></div></article>
@@ -21,7 +21,7 @@
     </section>
     <?php endif; ?>
 
-    <section class="kpi-grid" style="grid-template-columns:repeat(3,1fr)">
+    <section class="kpi-grid cols-3">
         <article class="kpi-card violet"><div class="kpi-content"><span>إجمالي المبيعات (آجل)</span><strong><?= money($salesTotal) ?></strong></div></article>
         <article class="kpi-card green"><div class="kpi-content"><span>إجمالي التحصيلات</span><strong><?= money($paymentsTotal) ?></strong></div></article>
         <article class="kpi-card <?= $finalBalance > 0 ? 'pink' : 'teal' ?>"><div class="kpi-content"><span>الرصيد النهائي</span><strong><?= money($finalBalance) ?></strong></div></article>

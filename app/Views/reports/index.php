@@ -101,7 +101,7 @@
     </section>
 
     <?php if ($type === 'sales'): ?>
-        <section class="kpi-grid" style="grid-template-columns:repeat(4,1fr)">
+        <section class="kpi-grid cols-4">
             <article class="kpi-card blue"><div class="kpi-icon">▦</div><div class="kpi-content"><span>عدد العمليات</span><strong><?= int_num($data['totals']['count']) ?></strong></div></article>
             <article class="kpi-card violet"><div class="kpi-icon">♧</div><div class="kpi-content"><span>الشدات المباعة</span><strong><?= int_num($data['totals']['bundles']) ?></strong></div></article>
             <article class="kpi-card green"><div class="kpi-icon">↗</div><div class="kpi-content"><span>نقدي</span><strong><?= money($data['totals']['cash_total']) ?></strong></div></article>
@@ -133,7 +133,7 @@
         </section>
 
     <?php elseif ($type === 'payments'): ?>
-        <section class="kpi-grid" style="grid-template-columns:repeat(2,1fr)">
+        <section class="kpi-grid cols-2">
             <article class="kpi-card green"><div class="kpi-icon">♣</div><div class="kpi-content"><span>إجمالي التحصيلات</span><strong><?= money($data['total']) ?></strong></div></article>
             <article class="kpi-card blue"><div class="kpi-icon">▦</div><div class="kpi-content"><span>عدد العمليات</span><strong><?= int_num($data['count']) ?></strong></div></article>
         </section>
@@ -158,7 +158,7 @@
         </section>
 
     <?php elseif ($type === 'expenses'): ?>
-        <section class="kpi-grid" style="grid-template-columns:repeat(2,1fr)">
+        <section class="kpi-grid cols-2">
             <article class="kpi-card pink"><div class="kpi-icon">▣</div><div class="kpi-content"><span>إجمالي المصروفات</span><strong><?= money($data['total']) ?></strong></div></article>
             <article class="kpi-card blue"><div class="kpi-icon">▦</div><div class="kpi-content"><span>عدد العمليات</span><strong><?= int_num($data['count']) ?></strong></div></article>
         </section>
@@ -200,7 +200,7 @@
         </section>
 
     <?php elseif ($type === 'cash'): ?>
-        <section class="kpi-grid" style="grid-template-columns:repeat(3,1fr)">
+        <section class="kpi-grid cols-3">
             <article class="kpi-card green"><div class="kpi-icon">↗</div><div class="kpi-content"><span>إجمالي الدخول</span><strong><?= money($data['total_in']) ?></strong></div></article>
             <article class="kpi-card pink"><div class="kpi-icon">↓</div><div class="kpi-content"><span>إجمالي الخروج</span><strong><?= money($data['total_out']) ?></strong></div></article>
             <article class="kpi-card teal"><div class="kpi-icon">▥</div><div class="kpi-content"><span>الصافي</span><strong><?= money($data['balance']) ?></strong></div></article>
@@ -227,7 +227,7 @@
         </section>
 
     <?php elseif ($type === 'inventory'): ?>
-        <section class="kpi-grid" style="grid-template-columns:repeat(4,1fr)">
+        <section class="kpi-grid cols-4">
             <article class="kpi-card blue"><div class="kpi-icon">♧</div><div class="kpi-content"><span>الداخل</span><strong><?= int_num($data['totals']['stock_in']) ?></strong></div></article>
             <article class="kpi-card violet"><div class="kpi-icon">↓</div><div class="kpi-content"><span>المباع</span><strong><?= int_num($data['totals']['sold']) ?></strong></div></article>
             <article class="kpi-card green"><div class="kpi-icon">▦</div><div class="kpi-content"><span>المتبقي</span><strong><?= int_num($data['totals']['bundles']) ?></strong></div></article>
@@ -252,7 +252,7 @@
         </section>
 
     <?php elseif ($type === 'distributors'): ?>
-        <section class="kpi-grid" style="grid-template-columns:repeat(4,1fr)">
+        <section class="kpi-grid cols-4">
             <article class="kpi-card blue"><div class="kpi-icon">▦</div><div class="kpi-content"><span>إجمالي المبيعات</span><strong><?= money($data['totals']['total_sales']) ?></strong></div></article>
             <article class="kpi-card purple"><div class="kpi-icon">♣</div><div class="kpi-content"><span>إجمالي التحصيلات</span><strong><?= money($data['totals']['paid_total']) ?></strong></div></article>
             <article class="kpi-card pink"><div class="kpi-icon">⚠</div><div class="kpi-content"><span>إجمالي الديون</span><strong><?= money($data['totals']['debt']) ?></strong></div></article>
@@ -282,7 +282,7 @@
         </section>
 
     <?php elseif ($type === 'profit'): ?>
-        <section class="kpi-grid" style="grid-template-columns:repeat(3,1fr)">
+        <section class="kpi-grid cols-3">
             <article class="kpi-card green"><div class="kpi-icon">↗</div><div class="kpi-content"><span>الإيراد (المبيعات)</span><strong><?= money($data['revenue']) ?></strong></div></article>
             <article class="kpi-card pink"><div class="kpi-icon">▣</div><div class="kpi-content"><span>المصروفات</span><strong><?= money($data['expenses']) ?></strong></div></article>
             <article class="kpi-card amber"><div class="kpi-icon">▤</div><div class="kpi-content"><span>تكلفة الشراء المسجلة</span><strong><?= $data['available'] ? money($data['cost']) : 'غير مسجلة' ?></strong></div></article>
