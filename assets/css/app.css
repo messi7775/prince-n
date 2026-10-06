@@ -147,3 +147,17 @@ body{line-height:1.5}a{text-decoration:none;color:inherit}button{font:inherit}
  .kpi-grid{grid-template-columns:1fr}
  .data-table{display:block;overflow-x:auto;white-space:nowrap}
 }
+
+/* طباعة كشف الحساب — إخفاء عناصر الواجهة وإظهار الكشف فقط */
+@media print {
+    body { background: #fff !important; }
+    .sidebar, .topbar, .mobile-bottom-nav,
+    .kpi-grid, .form-collapse, .alert-panel,
+    .section-title .btn, .entity-form { display: none !important; }
+    .main-content { margin: 0 !important; padding: 0 !important; }
+    .dashboard-panel { box-shadow: none !important; border: none !important; padding: 0 !important; }
+    .section-title { margin-bottom: 8px !important; }
+    .data-table { font-size: 12px !important; }
+    .data-table thead { display: table-header-group; }
+    .data-table tr { page-break-inside: avoid; }
+}

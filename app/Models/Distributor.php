@@ -144,6 +144,26 @@ final class Distributor extends Model
 
         $whereSql = $where !== [] ? 'WHERE ' . implode(' AND ', $where) : '';
 
+        // الرصيد الافتتاحي قبل بداية الفترة (يُحسب فقط مع فلتر تاريخ وبدون فلتر نوع،
+        // لأن فلتر النوع يجعل الكشف قائمة بحث لا كشفًا زمنيًا متصلاً).
+        $opening = 0;
+        if ($dateFrom !== '' && $type === '') {
+            $row0 = $this->fetchOne(
+                "SELECT COALESCE(SUM(x.net), 0) AS net FROM (
+                    (SELECT COALESCE(SUM(total), 0) AS net FROM sales
+                      WHERE distributor_id = :oid1 AND payment_type = 'credit' AND created_at < :odf1)
+                    UNION ALL
+                    (SELECT COALESCE(-SUM(amount), 0) AS net FROM payments
+                      WHERE distributor_id = :oid2 AND created_at < :odf2)
+                ) x",
+                [
+                    ':oid1' => $id, ':oid2' => $id,
+                    ':odf1' => $dateFrom . ' 00:00:00', ':odf2' => $dateFrom . ' 00:00:00',
+                ]
+            );
+            $opening = (int)($row0['net'] ?? 0);
+        }
+
         $ledger = $this->fetchAll(
             "SELECT * FROM (
                 SELECT s.id AS ref_id, 'sale' AS kind, s.created_at,
@@ -163,8 +183,8 @@ final class Distributor extends Model
             $params
         );
 
-        // Running balance from the actual movements (debit − credit).
-        $balance = 0;
+        // Running balance from the actual movements (opening + debit − credit).
+        $balance = $opening;
         foreach ($ledger as &$row) {
             $balance += (int)$row['debit'] - (int)$row['credit'];
             $row['running'] = $balance;
@@ -173,6 +193,7 @@ final class Distributor extends Model
 
         return [
             'ledger'     => $ledger,
+            'opening'    => $opening,
             'sales_total'    => (int)array_sum(array_column($ledger, 'debit')),
             'payments_total' => (int)array_sum(array_column($ledger, 'credit')),
             'final_balance'  => $balance,

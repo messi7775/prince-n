@@ -11,7 +11,8 @@
         <article class="kpi-card blue"><div class="kpi-icon">♙</div><div class="kpi-content"><span>الموزع</span><strong><?= e($distributor['name']) ?></strong></div></article>
         <article class="kpi-card violet"><div class="kpi-icon">☎</div><div class="kpi-content"><span>الهاتف</span><strong><?= e($distributor['phone'] ?? '—') ?></strong></div></article>
         <article class="kpi-card amber"><div class="kpi-icon">⌁</div><div class="kpi-content"><span>آخر عملية</span><strong><?= $lastActivity ? ar_date($lastActivity) : '—' ?></strong></div></article>
-        <article class="kpi-card <?= $finalBalance > 0 ? 'pink' : ($finalBalance < 0 ? 'teal' : 'green') ?>"><div class="kpi-icon">▣</div><div class="kpi-content"><span>حالة الحساب</span><strong><?= $finalBalance > 0 ? 'مستحق عليه' : ($finalBalance < 0 ? 'رصيد للموزع' : 'متعادل') ?></strong></div></article>
+        <?php $trueBalance = (int)$creditTotal - (int)$paidTotal; ?>
+        <article class="kpi-card <?= $trueBalance > 0 ? 'pink' : ($trueBalance < 0 ? 'teal' : 'green') ?>"><div class="kpi-icon">▣</div><div class="kpi-content"><span>حالة الحساب</span><strong><?= $trueBalance > 0 ? 'مستحق عليه' : ($trueBalance < 0 ? 'رصيد للموزع' : 'متعادل') ?></strong></div></article>
     </section>
 
     <?php if ($distributor['note']): ?>
@@ -54,13 +55,17 @@
         <?php if (empty($ledger)): ?>
             <div class="empty-state">لا توجد حركات مطابقة</div>
         <?php else: ?>
+            <?php if ($opening !== 0 && $filters['type'] === ''): ?>
+            <div class="alert-message" style="padding:8px 16px;">رصيد افتتاحي قبل <?= ar_date($filters['date_from']) ?>: <strong><?= money($opening) ?></strong></div>
+            <?php endif; ?>
             <table class="data-table" id="statement-table">
                 <thead>
-                    <tr><th>التاريخ</th><th>نوع الحركة</th><th>البيان</th><th>مدين</th><th>دائن</th><th>الرصيد</th></tr>
+                    <tr><th>رقم العملية</th><th>التاريخ</th><th>نوع الحركة</th><th>البيان</th><th>مدين</th><th>دائن</th><th>الرصيد بعد الحركة</th></tr>
                 </thead>
                 <tbody>
                     <?php foreach ($ledger as $row): ?>
                     <tr>
+                        <td><?= $row['kind'] === 'sale' ? 'ب' : 'ت' ?>-<?= (int)$row['ref_id'] ?></td>
                         <td><?= ar_date($row['created_at']) ?></td>
                         <td><span class="badge <?= $row['kind'] === 'sale' ? 'zero' : 'ok' ?>"><?= $row['kind'] === 'sale' ? 'بيع آجل' : 'تحصيل' ?></span></td>
                         <td><?= e($row['description']) ?></td>
@@ -72,7 +77,7 @@
                 </tbody>
                 <tfoot>
                     <tr>
-                        <td colspan="3"><strong>الإجمالي</strong></td>
+                        <td colspan="4"><strong>الإجمالي</strong></td>
                         <td><strong><?= money($salesTotal) ?></strong></td>
                         <td><strong><?= money($paymentsTotal) ?></strong></td>
                         <td><strong><?= money($finalBalance) ?></strong></td>

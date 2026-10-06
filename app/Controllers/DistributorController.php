@@ -36,6 +36,7 @@ final class DistributorController extends Controller
             'distributor'  => $distributor,
             'filters'      => $filters,
             'ledger'       => $statement['ledger'],
+            'opening'      => $statement['opening'],
             'salesTotal'   => $statement['sales_total'],
             'paymentsTotal'=> $statement['payments_total'],
             'finalBalance' => $statement['final_balance'],
