@@ -25,6 +25,37 @@ final class Inventory extends Model
         );
     }
 
+    /** Batches with search + filters (package, text, remaining state). */
+    public function searchBatches(array $filters = []): array
+    {
+        $where  = [];
+        $params = [];
+
+        $q = trim((string)($filters['q'] ?? ''));
+        if ($q !== '') {
+            $where[] = '(p.name LIKE :q_name OR i.note LIKE :q_note)';
+            $params['q_name'] = '%' . $q . '%';
+            $params['q_note'] = '%' . $q . '%';
+        }
+
+        $packageId = (int)($filters['package_id'] ?? 0);
+        if ($packageId > 0) {
+            $where[] = 'i.package_id = :package_id';
+            $params['package_id'] = $packageId;
+        }
+
+        $whereSql = $where !== [] ? 'WHERE ' . implode(' AND ', $where) : '';
+
+        return $this->fetchAll(
+            "SELECT i.*, p.name AS package_name, (i.quantity - i.sold) AS remaining
+               FROM inventory i
+               JOIN packages p ON p.id = i.package_id
+              $whereSql
+              ORDER BY i.created_at DESC, i.id DESC",
+            $params
+        );
+    }
+
     public function find(int $id): ?array
     {
         return $this->fetchOne('SELECT * FROM inventory WHERE id = ?', [$id]);
@@ -147,6 +178,12 @@ final class Inventory extends Model
     // Aggregates for dashboard / reports
     // ------------------------------------------------------------------
 
+    /** Total remaining bundles across all packages (الكروت المتبقية). */
+    public function remainingTotal(): int
+    {
+        return $this->fetchInt('SELECT COALESCE(SUM(quantity - sold), 0) FROM inventory');
+    }
+
     public function totalBundles(): int
     {
         return $this->fetchInt("SELECT COALESCE(SUM(quantity - sold), 0) FROM inventory WHERE status = 'active'");
@@ -157,6 +194,8 @@ final class Inventory extends Model
     {
         return $this->fetchAll(
             "SELECT p.id, p.name, p.bundle_price, p.low_stock_threshold,
+                    COALESCE(SUM(i.quantity), 0) AS stock_in,
+                    COALESCE(SUM(i.sold), 0) AS sold,
                     COALESCE(SUM(i.quantity - i.sold), 0) AS bundles,
                     COALESCE(SUM((i.quantity - i.sold) * i.bundle_price), 0) AS value
                FROM packages p

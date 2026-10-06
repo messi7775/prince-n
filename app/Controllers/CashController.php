@@ -15,18 +15,30 @@ final class CashController extends Controller
         $this->requireAuth();
 
         $cash = new CashMovement();
-        $movements = $cash->allWithRunningBalance();
+
+        $filters = [
+            'q'         => (string)$request->input('q', ''),
+            'direction' => (string)$request->input('direction', ''),
+            'date_from' => (string)$request->input('date_from', ''),
+            'date_to'   => (string)$request->input('date_to', ''),
+        ];
+
+        $result    = $cash->search($filters);
+        $movements = $result['rows'];
         $balance   = $cash->balance();
-        $totalIn   = $cash->totalIn();
-        $totalOut  = $cash->totalOut();
+        $totalIn   = $result['total_in'];
+        $totalOut  = $result['total_out'];
 
         $this->view('cash/index', [
-            'pageTitle' => 'الصندوق',
-            'active'    => 'cash',
-            'movements' => $movements,
-            'balance'   => $balance,
-            'totalIn'   => $totalIn,
-            'totalOut'  => $totalOut,
+            'pageTitle'     => 'الصندوق',
+            'active'        => 'cash',
+            'movements'     => $movements,
+            'balance'       => $balance,
+            'totalIn'       => $totalIn,
+            'totalOut'      => $totalOut,
+            'filters'       => $filters,
+            'filteredBalance' => $result['balance'],
+            'filteredCount'   => $result['count'],
         ]);
     }
 

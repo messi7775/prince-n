@@ -29,6 +29,17 @@
     </section>
 
     <section class="dashboard-panel">
+        <div class="section-title"><h3>البحث والفلترة</h3><span>⌕</span></div>
+        <form method="get" action="/distributors" class="entity-form">
+            <div class="form-grid">
+                <label>بحث<input type="text" name="q" value="<?= e($q) ?>" placeholder="اسم / هاتف / ملاحظة"></label>
+            </div>
+            <button class="btn primary" type="submit">تطبيق</button>
+            <a class="btn" href="/distributors">مسح الفلاتر</a>
+        </form>
+    </section>
+
+    <section class="dashboard-panel">
         <div class="section-title"><h3>قائمة الموزعين</h3><span>♙</span></div>
         <?php if (empty($distributors)): ?>
             <div class="empty-state">لا يوجد موزعون حتى الآن</div>

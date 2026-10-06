@@ -16,13 +16,20 @@ final class InventoryController extends Controller
         $this->requireAuth();
 
         $inventory = new Inventory();
+
+        $filters = [
+            'q'          => (string)$request->input('q', ''),
+            'package_id' => (int)$request->input('package_id', 0),
+        ];
+
         $this->view('inventory/index', [
             'pageTitle' => 'المخزون',
             'active'    => 'inventory',
-            'items'     => $inventory->all(),
+            'items'     => $inventory->searchBatches($filters),
             'lowStock'  => $inventory->lowStock(),
             'movements' => $inventory->movements(200),
             'packages'  => (new Package())->all(),
+            'filters'   => $filters,
         ]);
     }
 

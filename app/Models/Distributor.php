@@ -26,6 +26,55 @@ final class Distributor extends Model
         );
     }
 
+    /**
+     * Per-distributor report rows in one query set:
+     * total sales (all types), credit sales, collections, outstanding debt.
+     */
+    public function reportRows(): array
+    {
+        return $this->fetchAll(
+            "SELECT d.id, d.name, d.phone, d.created_at,
+                    COALESCE(s.total_sales, 0)  AS total_sales,
+                    COALESCE(s.credit_sales, 0) AS credit_sales,
+                    COALESCE(s.sales_count, 0)  AS sales_count,
+                    COALESCE(p.paid, 0)         AS paid_total,
+                    COALESCE(s.credit_sales, 0) - COALESCE(p.paid, 0) AS debt
+               FROM distributors d
+          LEFT JOIN (
+                    SELECT distributor_id,
+                           SUM(total) AS total_sales,
+                           SUM(CASE WHEN payment_type = 'credit' THEN total ELSE 0 END) AS credit_sales,
+                           COUNT(*) AS sales_count
+                      FROM sales
+                  GROUP BY distributor_id
+               ) s ON s.distributor_id = d.id
+          LEFT JOIN (
+                    SELECT distributor_id, SUM(amount) AS paid
+                      FROM payments
+                  GROUP BY distributor_id
+               ) p ON p.distributor_id = d.id
+              ORDER BY debt DESC, total_sales DESC"
+        );
+    }
+
+    /** Distributors filtered by name/phone text search. */
+    public function search(string $q = ''): array
+    {
+        $q = trim($q);
+        if ($q === '') {
+            return $this->all();
+        }
+        return $this->fetchAll(
+            "SELECT d.*,
+                    COALESCE((SELECT SUM(s.total) FROM sales s WHERE s.distributor_id = d.id AND s.payment_type = 'credit'), 0) AS credit_total,
+                    COALESCE((SELECT SUM(p.amount) FROM payments p WHERE p.distributor_id = d.id), 0) AS paid_total
+               FROM distributors d
+              WHERE d.name LIKE :q_name OR d.phone LIKE :q_phone OR COALESCE(d.note, '') LIKE :q_note
+              ORDER BY d.name",
+            ['q_name' => '%' . $q . '%', 'q_phone' => '%' . $q . '%', 'q_note' => '%' . $q . '%']
+        );
+    }
+
     public function find(int $id): ?array
     {
         return $this->fetchOne('SELECT * FROM distributors WHERE id = ?', [$id]);

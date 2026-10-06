@@ -47,6 +47,18 @@ final class Payment extends Model
         return $this->fetchInt('SELECT COALESCE(SUM(amount), 0) FROM payments');
     }
 
+    /** Daily collections totals for the last N days. */
+    public function dailyTotals(int $days = 7): array
+    {
+        return $this->fetchAll(
+            "SELECT DATE(created_at) AS day,
+                    COALESCE(SUM(amount), 0) AS total
+               FROM payments
+              WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL " . (int)$days . " DAY)
+              GROUP BY DATE(created_at)"
+        );
+    }
+
     /** Collections with search + filters (distributor, date range). */
     public function search(array $filters = []): array
     {
@@ -55,8 +67,9 @@ final class Payment extends Model
 
         $q = trim((string)($filters['q'] ?? ''));
         if ($q !== '') {
-            $where[] = '(d.name LIKE :q OR p.note LIKE :q)';
-            $params['q'] = '%' . $q . '%';
+            $where[] = '(d.name LIKE :q_name OR p.note LIKE :q_note)';
+            $params['q_name'] = '%' . $q . '%';
+            $params['q_note'] = '%' . $q . '%';
         }
 
         $distributorId = (int)($filters['distributor_id'] ?? 0);

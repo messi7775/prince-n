@@ -51,12 +51,14 @@ final class DistributorController extends Controller
         $this->requireAuth();
 
         $distributor = new Distributor();
-        $distributors = $distributor->all();
+        $q = (string)$request->input('q', '');
+        $distributors = $distributor->search($q);
 
         $this->view('distributors/index', [
             'pageTitle'    => 'الموزعون',
             'active'       => 'distributors',
             'distributors' => $distributors,
+            'q'            => $q,
         ]);
     }
 

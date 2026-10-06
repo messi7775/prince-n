@@ -7,14 +7,14 @@
     </section>
 
     <section class="kpi-grid">
-        <article class="kpi-card blue"><div class="kpi-icon">↗</div><div class="kpi-content"><span>مبيعات اليوم (نقدي)</span><strong><?= money($kpis['sales_today']) ?></strong></div></article>
+        <article class="kpi-card blue"><div class="kpi-icon">↗</div><div class="kpi-content"><span>مبيعات اليوم</span><strong><?= money($kpis['sales_today']) ?></strong></div></article>
         <article class="kpi-card green"><div class="kpi-icon">▦</div><div class="kpi-content"><span>مبيعات الشهر</span><strong><?= money($kpis['sales_month']) ?></strong></div></article>
         <article class="kpi-card purple"><div class="kpi-icon">♣</div><div class="kpi-content"><span>تحصيلات اليوم</span><strong><?= money($kpis['collections_today']) ?></strong></div></article>
-        <article class="kpi-card pink"><div class="kpi-icon">⚠</div><div class="kpi-content"><span>ديون الموزعين</span><strong><?= money($kpis['distributor_debt']) ?></strong></div></article>
-        <article class="kpi-card teal"><div class="kpi-icon">▣</div><div class="kpi-content"><span>رصيد الصندوق</span><strong><?= money($kpis['cash_balance']) ?></strong></div></article>
+        <article class="kpi-card pink"><div class="kpi-icon">▣</div><div class="kpi-content"><span>مصروفات اليوم</span><strong><?= money($kpis['expenses_today']) ?></strong></div></article>
+        <article class="kpi-card teal"><div class="kpi-icon">▥</div><div class="kpi-content"><span>صافي حركة الصندوق</span><strong><?= money($kpis['cash_balance']) ?></strong></div></article>
+        <article class="kpi-card pink"><div class="kpi-icon">⚠</div><div class="kpi-content"><span>إجمالي الديون</span><strong><?= money($kpis['distributor_debt']) ?></strong></div></article>
         <article class="kpi-card amber"><div class="kpi-icon">▦</div><div class="kpi-content"><span>قيمة المخزون</span><strong><?= money($kpis['inventory_value']) ?></strong></div></article>
-        <article class="kpi-card violet"><div class="kpi-icon">♙</div><div class="kpi-content"><span>عدد الموزعين</span><strong><?= int_num($kpis['distributors_count']) ?></strong></div></article>
-        <article class="kpi-card blue"><div class="kpi-icon">◇</div><div class="kpi-content"><span>عدد الباقات</span><strong><?= int_num($kpis['packages_count']) ?> <small>(<?= int_num($kpis['packages_active']) ?> نشطة)</small></strong></div></article>
+        <article class="kpi-card violet"><div class="kpi-icon">♧</div><div class="kpi-content"><span>الكروت المتبقية (شدة)</span><strong><?= int_num($kpis['bundles_remaining']) ?></strong></div></article>
         <article class="kpi-card amber"><div class="kpi-icon">↓</div><div class="kpi-content"><span>سحوبات المالك</span><strong><?= money($kpis['owner_withdrawals']) ?></strong></div></article>
         <article class="kpi-card pink"><div class="kpi-icon">▣</div><div class="kpi-content"><span>إجمالي المصروفات</span><strong><?= money($kpis['expenses_total']) ?></strong></div></article>
         <article class="kpi-card violet"><div class="kpi-icon">⌁</div><div class="kpi-content"><span>عدد الخطوط</span><strong><?= int_num($kpis['lines_count']) ?></strong></div></article>
@@ -37,6 +37,76 @@
         </div>
     </section>
     <?php endif; ?>
+
+    <section class="dashboard-panel">
+        <div class="section-title"><h3>آخر 7 أيام — المبيعات / التحصيلات / الصندوق</h3><span>▤</span></div>
+        <?php $maxDaily = max(1, max(array_map(static fn ($d) => max((int)$d['sales'], (int)$d['payments'], (int)$d['cash_in'], (int)$d['cash_out']), $daily))); ?>
+        <table class="data-table">
+            <thead><tr><th>اليوم</th><th>المبيعات</th><th>التحصيلات</th><th>دخول الصندوق</th><th>خروج الصندوق</th></tr></thead>
+            <tbody>
+                <?php foreach ($daily as $d): ?>
+                <tr>
+                    <td><?= ar_date($d['day']) ?></td>
+                    <td><?= money($d['sales']) ?></td>
+                    <td><?= money($d['payments']) ?></td>
+                    <td><?= money($d['cash_in']) ?></td>
+                    <td><?= money($d['cash_out']) ?></td>
+                </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+        <div class="daily-bars" aria-hidden="true">
+            <?php foreach ($daily as $d): ?>
+                <div class="daily-bar-group">
+                    <div class="daily-bar sales" style="height:<?= (int)round($d['sales'] * 40 / $maxDaily) ?>px" title="مبيعات: <?= money($d['sales']) ?>"></div>
+                    <div class="daily-bar payments" style="height:<?= (int)round($d['payments'] * 40 / $maxDaily) ?>px" title="تحصيلات: <?= money($d['payments']) ?>"></div>
+                </div>
+            <?php endforeach; ?>
+        </div>
+    </section>
+
+    <section class="dashboard-panel">
+        <div class="section-title"><h3>أكثر الباقات مبيعًا</h3><span>◇</span></div>
+        <?php if (empty($topPackages)): ?>
+            <div class="empty-state">لا توجد مبيعات حتى الآن</div>
+        <?php else: ?>
+            <table class="data-table">
+                <thead><tr><th>الباقة</th><th>عدد العمليات</th><th>الشدات</th><th>الإجمالي</th></tr></thead>
+                <tbody>
+                    <?php foreach ($topPackages as $p): ?>
+                    <tr>
+                        <td><?= e($p['name'] ?? '—') ?></td>
+                        <td><?= int_num($p['sales_count']) ?></td>
+                        <td><?= int_num($p['bundles']) ?></td>
+                        <td><?= money($p['total']) ?></td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        <?php endif; ?>
+    </section>
+
+    <section class="dashboard-panel">
+        <div class="section-title"><h3>أكبر الموزعين (مبيعات) وأعلى الديون</h3><span>♙</span></div>
+        <?php if (empty($topDistributors)): ?>
+            <div class="empty-state">لا يوجد موزعون حتى الآن</div>
+        <?php else: ?>
+            <table class="data-table">
+                <thead><tr><th>الموزع</th><th>عدد العمليات</th><th>إجمالي المبيعات</th><th>التحصيلات</th><th>الدين المتبقي</th></tr></thead>
+                <tbody>
+                    <?php foreach ($topDistributors as $d): ?>
+                    <tr>
+                        <td><?= e($d['name']) ?></td>
+                        <td><?= int_num($d['sales_count']) ?></td>
+                        <td><?= money($d['total_sales']) ?></td>
+                        <td><?= money($d['paid_total']) ?></td>
+                        <td><span class="badge <?= (int)$d['debt'] > 0 ? 'zero' : 'ok' ?>"><?= money($d['debt']) ?></span></td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        <?php endif; ?>
+    </section>
 
     <section class="dashboard-panel">
         <div class="section-title"><h3>العمليات الأخيرة</h3><span>⌁</span></div>

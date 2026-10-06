@@ -14,8 +14,10 @@ final class Line extends Model
 
         $q = trim((string)($filters['q'] ?? ''));
         if ($q !== '') {
-            $where[] = '(l.name LIKE :q OR l.provider LIKE :q OR l.note LIKE :q)';
-            $params['q'] = '%' . $q . '%';
+            $where[] = '(l.name LIKE :q_name OR l.provider LIKE :q_provider OR l.note LIKE :q_note)';
+            $params['q_name']     = '%' . $q . '%';
+            $params['q_provider'] = '%' . $q . '%';
+            $params['q_note']     = '%' . $q . '%';
         }
 
         $whereSql = $where !== [] ? 'WHERE ' . implode(' AND ', $where) : '';
@@ -70,8 +72,9 @@ final class Line extends Model
 
         $q = trim((string)($filters['q'] ?? ''));
         if ($q !== '') {
-            $where[] = '(l.name LIKE :q OR lp.note LIKE :q)';
-            $params['q'] = '%' . $q . '%';
+            $where[] = '(l.name LIKE :q_name OR lp.note LIKE :q_note)';
+            $params['q_name'] = '%' . $q . '%';
+            $params['q_note'] = '%' . $q . '%';
         }
 
         $lineId = (int)($filters['line_id'] ?? 0);

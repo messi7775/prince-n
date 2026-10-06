@@ -54,6 +54,25 @@
     </section>
 
     <section class="dashboard-panel">
+        <div class="section-title"><h3>البحث والفلترة</h3><span>⌕</span></div>
+        <form method="get" action="/inventory" class="entity-form">
+            <div class="form-grid">
+                <label>بحث<input type="text" name="q" value="<?= e($filters['q']) ?>" placeholder="باقة / ملاحظة"></label>
+                <label>الباقة
+                    <select name="package_id">
+                        <option value="">الكل</option>
+                        <?php foreach ($packages as $p): ?>
+                            <option value="<?= (int)$p['id'] ?>" <?= $filters['package_id'] === (int)$p['id'] ? 'selected' : '' ?>><?= e($p['name']) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </label>
+            </div>
+            <button class="btn primary" type="submit">تطبيق</button>
+            <a class="btn" href="/inventory">مسح الفلاتر</a>
+        </form>
+    </section>
+
+    <section class="dashboard-panel">
         <div class="section-title"><h3>دفعات المخزون</h3><span>♧</span></div>
         <?php if (empty($items)): ?>
             <div class="empty-state">لا يوجد مخزون — أضف دفعة جديدة</div>

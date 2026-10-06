@@ -15,14 +15,24 @@ final class ExpenseController extends Controller
         $this->requireAuth();
 
         $expense = new Expense();
-        $expenses = $expense->all();
-        $total = $expense->total();
+
+        $filters = [
+            'q'         => (string)$request->input('q', ''),
+            'category'  => (string)$request->input('category', ''),
+            'date_from' => (string)$request->input('date_from', ''),
+            'date_to'   => (string)$request->input('date_to', ''),
+        ];
+
+        $expenses = $expense->search($filters);
+        $total = array_sum(array_map(static fn ($r) => (int)$r['amount'], $expenses));
 
         $this->view('expenses/index', [
-            'pageTitle' => 'المصروفات',
-            'active'    => 'expenses',
-            'expenses'  => $expenses,
-            'total'     => $total,
+            'pageTitle'  => 'المصروفات',
+            'active'     => 'expenses',
+            'expenses'   => $expenses,
+            'total'      => $total,
+            'filters'    => $filters,
+            'categories' => $expense->categories(),
         ]);
     }
 

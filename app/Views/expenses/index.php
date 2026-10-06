@@ -22,7 +22,28 @@
     </section>
 
     <section class="dashboard-panel">
-        <div class="section-title"><h3>إجمالي المصروفات: <?= money($total) ?></h3><span>▣</span></div>
+        <div class="section-title"><h3>البحث والفلترة</h3><span>⌕</span></div>
+        <form method="get" action="/expenses" class="entity-form">
+            <div class="form-grid">
+                <label>بحث<input type="text" name="q" value="<?= e($filters['q']) ?>" placeholder="تصنيف / ملاحظة"></label>
+                <label>التصنيف
+                    <select name="category">
+                        <option value="">الكل</option>
+                        <?php foreach ($categories as $c): ?>
+                            <option value="<?= e($c['category']) ?>" <?= $filters['category'] === $c['category'] ? 'selected' : '' ?>><?= e($c['category']) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </label>
+                <label>من تاريخ<input type="date" name="date_from" value="<?= e($filters['date_from']) ?>"></label>
+                <label>إلى تاريخ<input type="date" name="date_to" value="<?= e($filters['date_to']) ?>"></label>
+            </div>
+            <button class="btn primary" type="submit">تطبيق</button>
+            <a class="btn" href="/expenses">مسح الفلاتر</a>
+        </form>
+    </section>
+
+    <section class="dashboard-panel">
+        <div class="section-title"><h3>إجمالي المصروفات المطابقة: <?= money($total) ?></h3><span>▣</span></div>
     </section>
 
     <section class="dashboard-panel">
