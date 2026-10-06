@@ -284,6 +284,7 @@ html[data-theme="dark"] .icon-btn .moon{display:none}
   min-width:19px;height:19px;border-radius:99px;display:inline-grid;place-items:center;padding:0 5px
 }
 .filter-sheet{position:fixed;inset:0;z-index:120}
+.filter-sheet[hidden]{display:none !important}
 .filter-sheet-backdrop{position:absolute;inset:0;background:rgba(5,11,23,.55);opacity:0;transition:opacity .2s}
 .filter-sheet-panel{
   position:absolute;right:0;left:0;bottom:0;max-height:82vh;overflow-y:auto;
