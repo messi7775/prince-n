@@ -231,7 +231,7 @@ html[data-theme="dark"] .icon-btn .moon{display:none}
 .filter-bar{display:flex;flex-wrap:wrap;gap:10px;align-items:stretch;margin-top:6px}
 .filter-field{
   display:inline-flex;align-items:center;gap:9px;background:var(--surface-2);
-  border:1px solid var(--line);border-radius:var(--radius-sm);padding:0 13px;min-height:44px;
+  border:1px solid var(--line);border-radius:var(--radius-sm);padding:0 10px;min-height:auto;
   transition:border-color .15s,box-shadow .15s
 }
 .filter-field:focus-within{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft)}
@@ -247,10 +247,7 @@ html[data-theme="dark"] .icon-btn .moon{display:none}
 .filter-field.date{flex:0 1 165px}
 .filter-actions{display:inline-flex;gap:8px;align-items:center;margin-inline-start:auto}
 @media(max-width:850px){
-  .filter-bar{flex-direction:column;align-items:stretch}
-  .filter-field{width:100%;min-height:46px}
-  .filter-field.grow,.filter-field.date{flex:0 0 auto}
-  .filter-actions{margin-inline-start:0;flex-direction:row}
+  .filter-field{width:auto;min-height:auto}
 }
 
 /* ---------- Sale total ---------- */
@@ -355,7 +352,7 @@ html[data-theme="dark"] .icon-btn .moon{display:none}
   .kpi-icon{width:40px;height:40px;flex-basis:40px;font-size:19px}
   .kpi-content strong{font-size:19px}
   .kpi-content span{font-size:12px}
-  .form-grid{grid-template-columns:1fr}
+  .form-grid{grid-template-columns:repeat(3,1fr)}
   .data-table{font-size:13px}
   .data-table th,.data-table td{padding:7px 8px}
   .mobile-bottom-nav{
