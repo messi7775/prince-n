@@ -172,6 +172,26 @@ html[data-theme="dark"] .icon-btn .moon{display:none}
 
 /* ---------- Tables ---------- */
 .table-wrap{overflow-x:auto}
+
+/* قائمة إجراءات ⋮ */
+.kebab{position:relative;display:inline-block}
+.kebab-btn{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;
+  border-radius:var(--radius-sm);border:1px solid var(--line);background:var(--surface-2);
+  color:var(--text);cursor:pointer;font-size:15px;line-height:1;padding:0;letter-spacing:2px;
+  transition:border-color .15s,color .15s,background .15s}
+.kebab-btn:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-soft)}
+.kebab-dropdown{position:absolute;top:calc(100% + 4px);inset-inline-end:0;z-index:60;min-width:140px;
+  background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+  box-shadow:var(--shadow-lg);padding:5px;display:none;flex-direction:column;gap:2px}
+.kebab-dropdown.open{display:flex}
+.kebab-item{display:flex;align-items:center;gap:8px;width:100%;padding:7px 10px;border:0;
+  border-radius:var(--radius-sm);background:transparent;color:var(--text);font-size:13.5px;
+  font-weight:600;text-align:start;cursor:pointer;text-decoration:none;white-space:nowrap;
+  font-family:inherit;transition:background .12s,color .12s}
+.kebab-item:hover{background:var(--primary-soft);color:var(--primary)}
+.kebab-item.danger{color:var(--danger)}
+.kebab-item.danger:hover{background:var(--danger-soft);color:var(--danger)}
+.kebab-dropdown .inline-form{display:contents}
 .data-table{width:100%;border-collapse:collapse;font-size:14px}
 .data-table th{
   text-align:right;padding:10px 12px;background:var(--surface-2);color:var(--muted);

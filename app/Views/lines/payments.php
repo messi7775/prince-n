@@ -71,12 +71,17 @@
                         <td><span class="badge zero">خرج</span></td>
                         <td><?= e($p['note'] ?? '') ?></td>
                         <td class="actions-cell">
-                            <button class="btn sm primary line-payment-edit-btn" type="button" data-id="<?= (int)$p['id'] ?>" data-line-id="<?= (int)$p['line_id'] ?>" data-amount="<?= (int)$p['amount'] ?>" data-note="<?= e($p['note'] ?? '') ?>">تعديل</button>
-                            <form method="post" action="/line-payments/delete" class="inline-form" onsubmit="return confirm('حذف هذا التسديد؟ سيتم أيضًا إزالة أثره من الصندوق.')">
-                                <?= csrf_field() ?>
-                                <input type="hidden" name="id" value="<?= (int)$p['id'] ?>">
-                                <button class="btn sm danger" type="submit">حذف</button>
-                            </form>
+                            <div class="kebab">
+                                <button class="kebab-btn" type="button" aria-label="إجراءات">⋮</button>
+                                <div class="kebab-dropdown">
+                                    <button class="kebab-item line-payment-edit-btn" type="button" data-id="<?= (int)$p['id'] ?>" data-line-id="<?= (int)$p['line_id'] ?>" data-amount="<?= (int)$p['amount'] ?>" data-note="<?= e($p['note'] ?? '') ?>">✎ تعديل</button>
+                                    <form method="post" action="/line-payments/delete" class="inline-form" onsubmit="return confirm('حذف هذا التسديد؟ سيتم أيضًا إزالة أثره من الصندوق.')">
+                                        <?= csrf_field() ?>
+                                        <input type="hidden" name="id" value="<?= (int)$p['id'] ?>">
+                                        <button class="kebab-item danger" type="submit">🗑 حذف</button>
+                                    </form>
+                                </div>
+                            </div>
                         </td>
                     </tr>
                     <?php endforeach; ?>

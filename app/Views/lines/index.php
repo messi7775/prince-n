@@ -49,12 +49,17 @@
                         <td><?= e($l['provider'] ?? '') ?></td>
                         <td><span class="badge <?= (int)$l['balance'] >= 0 ? 'ok' : 'zero' ?>"><?= money($l['balance']) ?></span></td>
                         <td class="actions-cell">
-                            <button class="btn sm primary line-edit-btn" type="button" data-id="<?= (int)$l['id'] ?>" data-name="<?= e($l['name']) ?>" data-provider="<?= e($l['provider'] ?? '') ?>" data-note="<?= e($l['note'] ?? '') ?>">تعديل</button>
-                            <form method="post" action="/lines/delete" class="inline-form" onsubmit="return confirm('حذف هذا الخط؟')">
-                                <?= csrf_field() ?>
-                                <input type="hidden" name="id" value="<?= (int)$l['id'] ?>">
-                                <button class="btn sm danger" type="submit">حذف</button>
-                            </form>
+                            <div class="kebab">
+                                <button class="kebab-btn" type="button" aria-label="إجراءات">⋮</button>
+                                <div class="kebab-dropdown">
+                                    <button class="kebab-item line-edit-btn" type="button" data-id="<?= (int)$l['id'] ?>" data-name="<?= e($l['name']) ?>" data-provider="<?= e($l['provider'] ?? '') ?>" data-note="<?= e($l['note'] ?? '') ?>">✎ تعديل</button>
+                                    <form method="post" action="/lines/delete" class="inline-form" onsubmit="return confirm('حذف هذا الخط؟')">
+                                        <?= csrf_field() ?>
+                                        <input type="hidden" name="id" value="<?= (int)$l['id'] ?>">
+                                        <button class="kebab-item danger" type="submit">🗑 حذف</button>
+                                    </form>
+                                </div>
+                            </div>
                         </td>
                     </tr>
                     <?php endforeach; ?>

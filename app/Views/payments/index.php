@@ -68,17 +68,22 @@
                         <td><?= money($p['amount']) ?></td>
                         <td><?= e($p['note'] ?? '') ?></td>
                         <td class="actions-cell">
-                            <a class="btn sm" href="/payments/receipt?id=<?= (int)$p['id'] ?>" target="_blank">وصل</a>
-                            <button class="btn sm primary payment-edit-btn" type="button"
-                                data-id="<?= (int)$p['id'] ?>"
-                                data-distributor="<?= (int)$p['distributor_id'] ?>"
-                                data-amount="<?= (int)$p['amount'] ?>"
-                                data-note="<?= e($p['note'] ?? '') ?>">تعديل</button>
-                            <form method="post" action="/payments/delete" class="inline-form" onsubmit="return confirm('حذف هذا التحصيل؟\n\nسيتم أيضًا إزالة أثره من الصندوق والرصيد.')">
-                                <?= csrf_field() ?>
-                                <input type="hidden" name="id" value="<?= (int)$p['id'] ?>">
-                                <button class="btn sm danger" type="submit">حذف</button>
-                            </form>
+                            <div class="kebab">
+                                <button class="kebab-btn" type="button" aria-label="إجراءات">⋮</button>
+                                <div class="kebab-dropdown">
+                                    <a class="kebab-item" href="/payments/receipt?id=<?= (int)$p['id'] ?>" target="_blank">🧾 وصل</a>
+                                    <button class="kebab-item payment-edit-btn" type="button"
+                                        data-id="<?= (int)$p['id'] ?>"
+                                        data-distributor="<?= (int)$p['distributor_id'] ?>"
+                                        data-amount="<?= (int)$p['amount'] ?>"
+                                        data-note="<?= e($p['note'] ?? '') ?>">✎ تعديل</button>
+                                    <form method="post" action="/payments/delete" class="inline-form" onsubmit="return confirm('حذف هذا التحصيل؟\n\nسيتم أيضًا إزالة أثره من الصندوق والرصيد.')">
+                                        <?= csrf_field() ?>
+                                        <input type="hidden" name="id" value="<?= (int)$p['id'] ?>">
+                                        <button class="kebab-item danger" type="submit">🗑 حذف</button>
+                                    </form>
+                                </div>
+                            </div>
                         </td>
                     </tr>
                     <?php endforeach; ?>

@@ -93,15 +93,18 @@
                         <td><span class="badge <?= $remaining <= 0 ? 'zero' : 'ok' ?>"><?= int_num($remaining) ?><?= $remaining < 0 ? ' (عجز)' : '' ?></span></td>
                         <td><?= e($row['note'] ?? '') ?></td>
                         <td class="actions-cell">
-                            <div class="action-buttons">
-                                <button class="btn sm primary" type="button"
-                                    onclick="openInvForm('edit-<?= (int)$row['id'] ?>')">تعديل</button>
-                                <form method="post" action="/inventory/delete" class="inline-form"
-                                    onsubmit="return confirm('حذف هذه الدفعة؟')">
-                                    <?= csrf_field() ?>
-                                    <input type="hidden" name="id" value="<?= (int)$row['id'] ?>">
-                                    <button class="btn sm danger" type="submit">حذف</button>
-                                </form>
+                            <div class="kebab">
+                                <button class="kebab-btn" type="button" aria-label="إجراءات">⋮</button>
+                                <div class="kebab-dropdown">
+                                    <button class="kebab-item" type="button"
+                                        onclick="openInvForm('edit-<?= (int)$row['id'] ?>')">✎ تعديل</button>
+                                    <form method="post" action="/inventory/delete" class="inline-form"
+                                        onsubmit="return confirm('حذف هذه الدفعة؟')">
+                                        <?= csrf_field() ?>
+                                        <input type="hidden" name="id" value="<?= (int)$row['id'] ?>">
+                                        <button class="kebab-item danger" type="submit">🗑 حذف</button>
+                                    </form>
+                                </div>
                             </div>
                         </td>
                     </tr>

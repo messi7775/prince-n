@@ -48,5 +48,6 @@
 </div>
 <script src="/assets/js/app.js?v=<?= filemtime(dirname(__DIR__, 3) . '/assets/js/app.js') ?>"></script>
 <script src="/assets/js/filters.js?v=<?= filemtime(dirname(__DIR__, 3) . '/assets/js/filters.js') ?>"></script>
+<script src="/assets/js/row-menu.js?v=<?= filemtime(dirname(__DIR__, 3) . '/assets/js/row-menu.js') ?>"></script>
 </body>
 </html>

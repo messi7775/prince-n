@@ -139,19 +139,24 @@
                         <td><?= money($s['total']) ?></td>
                         <td><span class="badge <?= $typeBadge ?>"><?= $typeLabel ?></span></td>
                         <td class="actions-cell">
-                            <a class="btn sm" href="/sales/receipt?id=<?= (int)$s['id'] ?>" target="_blank">وصل</a>
-                            <button class="btn sm primary sale-edit-btn" type="button"
-                                data-id="<?= (int)$s['id'] ?>"
-                                data-package="<?= (int)$s['package_id'] ?>"
-                                data-distributor="<?= (int)$s['distributor_id'] ?>"
-                                data-bundles="<?= (int)$s['bundles_count'] ?>"
-                                data-type="<?= e($s['payment_type']) ?>"
-                                data-note="<?= e($s['note'] ?? '') ?>">تعديل</button>
-                            <form method="post" action="/sales/delete" class="inline-form" onsubmit="return confirm('حذف هذه العملية؟')">
-                                <?= csrf_field() ?>
-                                <input type="hidden" name="id" value="<?= (int)$s['id'] ?>">
-                                <button class="btn sm danger" type="submit">حذف</button>
-                            </form>
+                            <div class="kebab">
+                                <button class="kebab-btn" type="button" aria-label="إجراءات">⋮</button>
+                                <div class="kebab-dropdown">
+                                    <a class="kebab-item" href="/sales/receipt?id=<?= (int)$s['id'] ?>" target="_blank">🧾 وصل</a>
+                                    <button class="kebab-item sale-edit-btn" type="button"
+                                        data-id="<?= (int)$s['id'] ?>"
+                                        data-package="<?= (int)$s['package_id'] ?>"
+                                        data-distributor="<?= (int)$s['distributor_id'] ?>"
+                                        data-bundles="<?= (int)$s['bundles_count'] ?>"
+                                        data-type="<?= e($s['payment_type']) ?>"
+                                        data-note="<?= e($s['note'] ?? '') ?>">✎ تعديل</button>
+                                    <form method="post" action="/sales/delete" class="inline-form" onsubmit="return confirm('حذف هذه العملية؟')">
+                                        <?= csrf_field() ?>
+                                        <input type="hidden" name="id" value="<?= (int)$s['id'] ?>">
+                                        <button class="kebab-item danger" type="submit">🗑 حذف</button>
+                                    </form>
+                                </div>
+                            </div>
                         </td>
                     </tr>
                     <?php endforeach; ?>

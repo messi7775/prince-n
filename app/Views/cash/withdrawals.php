@@ -40,14 +40,17 @@
                         <td style="color:#e6466a"><?= money($w['amount']) ?></td>
                         <td><?= e($w['note'] ?? '') ?></td>
                         <td class="actions-cell">
-                            <div class="action-buttons">
-                                <button class="btn sm primary" type="button"
-                                    onclick="openRowForm('wd-edit-<?= (int)$w['id'] ?>')">تعديل</button>
-                                <form method="post" action="/owner-withdrawals/delete" class="inline-form" onsubmit="return confirm('حذف هذا السحب؟')">
-                                    <?= csrf_field() ?>
-                                    <input type="hidden" name="id" value="<?= (int)$w['id'] ?>">
-                                    <button class="btn sm danger" type="submit">حذف</button>
-                                </form>
+                            <div class="kebab">
+                                <button class="kebab-btn" type="button" aria-label="إجراءات">⋮</button>
+                                <div class="kebab-dropdown">
+                                    <button class="kebab-item" type="button"
+                                        onclick="openRowForm('wd-edit-<?= (int)$w['id'] ?>')">✎ تعديل</button>
+                                    <form method="post" action="/owner-withdrawals/delete" class="inline-form" onsubmit="return confirm('حذف هذا السحب؟')">
+                                        <?= csrf_field() ?>
+                                        <input type="hidden" name="id" value="<?= (int)$w['id'] ?>">
+                                        <button class="kebab-item danger" type="submit">🗑 حذف</button>
+                                    </form>
+                                </div>
                             </div>
                         </td>
                     </tr>
