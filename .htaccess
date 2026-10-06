@@ -1,0 +1,19 @@
+Options -Indexes
+DirectoryIndex index.php
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Never expose application internals or server-side data files.
+    RewriteRule ^(?:app|config|database|vendor|tools|storage)(?:/|$) - [F,L]
+    RewriteRule ^(?:\.git|\.base44)(?:/|$) - [F,L]
+    RewriteRule (^|/)\. - [F,L]
+
+    # Serve real files/directories directly (assets, images, etc.).
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
+
+    # Everything else goes through the front controller.
+    RewriteRule ^ index.php [QSA,L]
+</IfModule>
