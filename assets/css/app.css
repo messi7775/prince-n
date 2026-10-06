@@ -505,8 +505,12 @@ select option{background:var(--surface-2);color:var(--text)}
   .mobile-bottom-nav small{font-size:10px}
   .mobile-bottom-nav a.active{color:var(--primary)}
 }
+@media(max-width:600px){
+  .form-grid{grid-template-columns:repeat(2,1fr)}
+}
 @media(max-width:480px){
   .kpi-grid{grid-template-columns:1fr}
+  .form-grid{grid-template-columns:1fr}
   .data-table{display:block;overflow-x:auto;white-space:nowrap}
 }
 

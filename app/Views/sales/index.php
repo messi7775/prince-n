@@ -28,7 +28,7 @@
                             <?php endforeach; ?>
                         </select>
                     </label>
-                    <label>الموزع <span class="muted">(اختياري للنقدي، مطلوب للآجل)</span>
+                    <label>الموزع
                         <select name="distributor_id" id="sale-distributor">
                             <option value="">— اختر موزع —</option>
                             <?php foreach ($distributors as $d): ?>
