@@ -227,6 +227,32 @@ html[data-theme="dark"] .icon-btn .moon{display:none}
   outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft)
 }
 
+/* ---------- Compact filter bar ---------- */
+.filter-bar{display:flex;flex-wrap:wrap;gap:10px;align-items:stretch;margin-top:6px}
+.filter-field{
+  display:inline-flex;align-items:center;gap:9px;background:var(--surface-2);
+  border:1px solid var(--line);border-radius:var(--radius-sm);padding:0 13px;min-height:44px;
+  transition:border-color .15s,box-shadow .15s
+}
+.filter-field:focus-within{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft)}
+.filter-field label{font-size:12.5px;font-weight:700;color:var(--muted);white-space:nowrap;flex:0 0 auto}
+.filter-field input,.filter-field select{
+  border:0;background:transparent;padding:7px 2px;font-size:14px;font-family:inherit;
+  color:var(--text);min-width:0;max-width:100%
+}
+.filter-field input:focus,.filter-field select:focus{outline:none;box-shadow:none}
+.filter-field input::placeholder{color:var(--muted);opacity:.7}
+.filter-field select{cursor:pointer}
+.filter-field.grow{flex:1 1 220px}
+.filter-field.date{flex:0 1 165px}
+.filter-actions{display:inline-flex;gap:8px;align-items:center;margin-inline-start:auto}
+@media(max-width:850px){
+  .filter-bar{flex-direction:column;align-items:stretch}
+  .filter-field{width:100%;min-height:46px}
+  .filter-field.grow,.filter-field.date{flex:0 0 auto}
+  .filter-actions{margin-inline-start:0;flex-direction:row}
+}
+
 /* ---------- Sale total ---------- */
 .sale-total{
   padding:12px 18px;background:linear-gradient(90deg,var(--primary-soft),var(--accent-soft));

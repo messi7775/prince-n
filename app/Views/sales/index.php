@@ -55,49 +55,63 @@
 
     <section class="dashboard-panel">
         <div class="section-title"><h3>البحث والفلترة</h3><span>⌕</span></div>
-        <form method="get" action="/sales" class="entity-form">
-            <div class="form-grid">
-                <label>بحث<input type="text" name="q" value="<?= e($filters['q']) ?>" placeholder="موزع / باقة / ملاحظة"></label>
-                <label>من تاريخ<input type="date" name="date_from" value="<?= e($filters['date_from']) ?>"></label>
-                <label>إلى تاريخ<input type="date" name="date_to" value="<?= e($filters['date_to']) ?>"></label>
-                <label>الموزع
-                    <select name="distributor_id">
-                        <option value="">الكل</option>
-                        <?php foreach ($distributors as $d): ?>
-                            <option value="<?= (int)$d['id'] ?>" <?= $filters['distributor_id'] === (int)$d['id'] ? 'selected' : '' ?>><?= e($d['name']) ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </label>
-                <label>الباقة
-                    <select name="package_id">
-                        <option value="">الكل</option>
-                        <?php foreach ($packages as $p): ?>
-                            <option value="<?= (int)$p['id'] ?>" <?= $filters['package_id'] === (int)$p['id'] ? 'selected' : '' ?>><?= e($p['name']) ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </label>
-                <label>نوع البيع
-                    <select name="payment_type">
-                        <option value="">الكل</option>
-                        <option value="cash" <?= $filters['payment_type'] === 'cash' ? 'selected' : '' ?>>نقدي</option>
-                        <option value="credit" <?= $filters['payment_type'] === 'credit' ? 'selected' : '' ?>>آجل</option>
-                    </select>
-                </label>
-                <label>ترتيب حسب
-                    <select name="sort">
-                        <option value="date" <?= $filters['sort'] === 'date' ? 'selected' : '' ?>>التاريخ</option>
-                        <option value="total" <?= $filters['sort'] === 'total' ? 'selected' : '' ?>>الإجمالي</option>
-                    </select>
-                </label>
-                <label>الاتجاه
-                    <select name="dir">
-                        <option value="desc" <?= $filters['dir'] === 'desc' ? 'selected' : '' ?>>تنازلي</option>
-                        <option value="asc" <?= $filters['dir'] === 'asc' ? 'selected' : '' ?>>تصاعدي</option>
-                    </select>
-                </label>
+        <form method="get" action="/sales" class="filter-bar">
+            <div class="filter-field grow">
+                <label for="f-q">بحث</label>
+                <input id="f-q" type="text" name="q" value="<?= e($filters['q']) ?>" placeholder="موزع / باقة / ملاحظة">
             </div>
-            <button class="btn primary" type="submit">تطبيق</button>
-            <a class="btn" href="/sales">مسح الفلاتر</a>
+            <div class="filter-field">
+                <label for="f-from">من تاريخ</label>
+                <input id="f-from" type="date" name="date_from" value="<?= e($filters['date_from']) ?>">
+            </div>
+            <div class="filter-field">
+                <label for="f-to">إلى تاريخ</label>
+                <input id="f-to" type="date" name="date_to" value="<?= e($filters['date_to']) ?>">
+            </div>
+            <div class="filter-field">
+                <label for="f-dist">الموزع</label>
+                <select id="f-dist" name="distributor_id">
+                    <option value="">الكل</option>
+                    <?php foreach ($distributors as $d): ?>
+                        <option value="<?= (int)$d['id'] ?>" <?= $filters['distributor_id'] === (int)$d['id'] ? 'selected' : '' ?>><?= e($d['name']) ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div class="filter-field">
+                <label for="f-pkg">الباقة</label>
+                <select id="f-pkg" name="package_id">
+                    <option value="">الكل</option>
+                    <?php foreach ($packages as $p): ?>
+                        <option value="<?= (int)$p['id'] ?>" <?= $filters['package_id'] === (int)$p['id'] ? 'selected' : '' ?>><?= e($p['name']) ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div class="filter-field">
+                <label for="f-type">نوع البيع</label>
+                <select id="f-type" name="payment_type">
+                    <option value="">الكل</option>
+                    <option value="cash" <?= $filters['payment_type'] === 'cash' ? 'selected' : '' ?>>نقدي</option>
+                    <option value="credit" <?= $filters['payment_type'] === 'credit' ? 'selected' : '' ?>>آجل</option>
+                </select>
+            </div>
+            <div class="filter-field">
+                <label for="f-sort">ترتيب حسب</label>
+                <select id="f-sort" name="sort">
+                    <option value="date" <?= $filters['sort'] === 'date' ? 'selected' : '' ?>>التاريخ</option>
+                    <option value="total" <?= $filters['sort'] === 'total' ? 'selected' : '' ?>>الإجمالي</option>
+                </select>
+            </div>
+            <div class="filter-field">
+                <label for="f-dir">الاتجاه</label>
+                <select id="f-dir" name="dir">
+                    <option value="desc" <?= $filters['dir'] === 'desc' ? 'selected' : '' ?>>تنازلي</option>
+                    <option value="asc" <?= $filters['dir'] === 'asc' ? 'selected' : '' ?>>تصاعدي</option>
+                </select>
+            </div>
+            <div class="filter-actions">
+                <button class="btn primary" type="submit">تطبيق</button>
+                <a class="btn" href="/sales">مسح الفلاتر</a>
+            </div>
         </form>
     </section>
 

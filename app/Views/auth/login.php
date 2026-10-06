@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#0d1528">
     <title>تسجيل الدخول | شبكة البرنس</title>
-    <link rel="stylesheet" href="/assets/css/app.css">
+    <link rel="stylesheet" href="/assets/css/app.css?v=<?= filemtime(__DIR__ . "/../../assets/css/app.css") ?>">
 </head>
 <body class="login-page">
     <div class="login-card">
