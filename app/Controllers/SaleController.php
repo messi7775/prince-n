@@ -34,16 +34,31 @@ final class SaleController extends Controller
 
         $result = (new Sale())->search($filters);
 
+        // Item rows per sale (used to prefill the multi-package edit form).
+        $itemsBySale = [];
+        foreach ($result['rows'] as $row) {
+            $itemsBySale[(int)$row['id']] = (new Sale())->items((int)$row['id']);
+        }
+
+        // Available stock per package (display hint in the sale form).
+        $packages     = (new Package())->active();
+        $stockByPackage = [];
+        foreach ($packages as $pkg) {
+            $stockByPackage[(int)$pkg['id']] = (new Inventory())->availableForPackage((int)$pkg['id']);
+        }
+
         $this->view('sales/index', [
-            'pageTitle'    => 'المبيعات',
-            'active'       => 'sales',
-            'sales'        => $result['rows'],
-            'total'        => $result['total'],
-            'page'         => $result['page'],
-            'pages'        => $result['pages'],
-            'filters'      => $filters,
-            'packages'     => (new Package())->active(),
-            'distributors' => (new Distributor())->all(),
+            'pageTitle'      => 'المبيعات',
+            'active'         => 'sales',
+            'itemsBySale'    => $itemsBySale,
+            'sales'          => $result['rows'],
+            'total'          => $result['total'],
+            'page'           => $result['page'],
+            'pages'          => $result['pages'],
+            'filters'        => $filters,
+            'packages'       => $packages,
+            'stockByPackage' => $stockByPackage,
+            'distributors'   => (new Distributor())->all(),
         ]);
     }
 
@@ -60,6 +75,7 @@ final class SaleController extends Controller
 
         $this->view('sales/receipt', [
             'sale'     => $sale,
+            'items'    => (new Sale())->items($id),
             'pageTitle' => 'وصل بيع #' . $id,
         ], null);
     }
@@ -69,35 +85,55 @@ final class SaleController extends Controller
         $this->requireAuth();
         $this->verifyCsrf();
 
-        $data = $this->validateSaleInput($request);
-        if ($data === null) {
+        [$items, $meta] = $this->validateSaleItems($request);
+        if ($items === null) {
             $this->redirect('/sales');
         }
 
-        // Business rule: a sale may never exceed the available stock.
-        if ((new Inventory())->availableForPackage((int)$data['package_id']) < (int)$data['bundles_count']) {
-            Session::flash('error', 'الكمية المطلوبة غير متوفرة في المخزون — لا يمكن البيع فوق المخزون.');
-            $this->redirect('/sales');
+        // Business rule: a sale may never exceed the available stock (per package).
+        $inventory = new Inventory();
+        foreach ($items as $item) {
+            if ($inventory->availableForPackage((int)$item['package_id']) < (int)$item['bundles_count']) {
+                Session::flash('error', 'الكمية المطلوبة من «' . $item['package_name'] . '» غير متوفرة في المخزون — لا يمكن البيع فوق المخزون.');
+                $this->redirect('/sales');
+            }
         }
 
         $stock = new StockService();
-
         $db = \Database::connection();
 
         try {
             $db->beginTransaction();
 
-            $saleId = (new Sale())->create($data);
+            // ONE sale operation: header total = sum of items; a single cash
+            // movement and a single receipt/report row.
+            $saleId = (new Sale())->create([
+                'distributor_id' => $meta['distributor_id'],
+                'package_id'     => null,
+                'bundles_count'  => 0,
+                'bundle_price'   => 0,
+                'total'          => $meta['total'],
+                'payment_type'   => $meta['payment_type'],
+                'note'           => $meta['note'],
+            ]);
 
-            // Allocate stock exactly to the batches (FIFO) and log movements.
-            if ($stock->consume((int)$data['package_id'], (int)$data['bundles_count'], $saleId) === null) {
-                throw new \RuntimeException('insufficient_stock');
+            foreach ($items as $item) {
+                if ($stock->consume((int)$item['package_id'], (int)$item['bundles_count'], $saleId) === null) {
+                    throw new \RuntimeException('insufficient_stock');
+                }
+                (new Sale())->createItem([
+                    'sale_id'       => $saleId,
+                    'package_id'    => $item['package_id'],
+                    'bundles_count' => $item['bundles_count'],
+                    'bundle_price'  => $item['bundle_price'],
+                    'total'         => $item['total'],
+                ]);
             }
 
-            if ($data['payment_type'] === 'cash') {
+            if ($meta['payment_type'] === 'cash') {
                 (new CashMovement())->create([
                     'direction'      => CashMovement::IN,
-                    'amount'         => $data['total'],
+                    'amount'         => $meta['total'],
                     'reason'         => 'بيع كروت (نقدي)',
                     'reference_type' => 'sale',
                     'reference_id'   => $saleId,
@@ -112,7 +148,11 @@ final class SaleController extends Controller
             throw $e;
         }
 
-        $this->logAudit('sale_create', "بيع {$data['bundles_count']} شدة × {$data['bundle_price']} = {$data['total']}", $data);
+        $summary = implode(' + ', array_map(
+            static fn ($i) => $i['bundles_count'] . '×' . $i['package_name'] . '@' . $i['bundle_price'],
+            $items
+        ));
+        $this->logAudit('sale_create', "بيع {$meta['total']} ({$summary})", ['items' => $items, 'meta' => $meta]);
         $this->redirect('/sales');
     }
 
@@ -127,24 +167,36 @@ final class SaleController extends Controller
             $this->redirect('/sales');
         }
 
-        $new = $this->validateSaleInput($request, true);
-        if ($new === null) {
+        [$items, $meta] = $this->validateSaleItems($request, true);
+        if ($items === null) {
             $this->redirect('/sales');
+        }
+
+        $saleModel = new Sale();
+        $inventory = new Inventory();
+
+        // Bundles consumed by the OLD sale per package return to stock first,
+        // so per-package availability only needs the difference to fit.
+        $oldByPackage = [];
+        foreach ($saleModel->items($id) as $oi) {
+            $oldByPackage[(int)$oi['package_id']] = ($oldByPackage[(int)$oi['package_id']] ?? 0) + (int)$oi['bundles_count'];
+        }
+
+        $newByPackage = [];
+        foreach ($items as $item) {
+            $newByPackage[(int)$item['package_id']] = ($newByPackage[(int)$item['package_id']] ?? 0) + (int)$item['bundles_count'];
+        }
+
+        foreach ($newByPackage as $pid => $need) {
+            $available = $inventory->availableForPackage($pid) + ($oldByPackage[$pid] ?? 0);
+            if ($available < $need) {
+                $pkg = (new Package())->find($pid);
+                Session::flash('error', 'الكمية المطلوبة من «' . ($pkg['name'] ?? '#') . '» غير متوفرة في المخزون — لا يمكن البيع فوق المخزون.');
+                $this->redirect('/sales');
+            }
         }
 
         $stock = new StockService();
-
-        // The old sale's bundles go back to stock before the new sale is
-        // applied, so a same-package edit only needs the difference to fit.
-        $available = (new Inventory())->availableForPackage((int)$new['package_id']);
-        if ((int)$old['package_id'] === (int)$new['package_id']) {
-            $available += (int)$old['bundles_count'];
-        }
-        if ($available < (int)$new['bundles_count']) {
-            Session::flash('error', 'الكمية المطلوبة غير متوفرة في المخزون — لا يمكن البيع فوق المخزون.');
-            $this->redirect('/sales');
-        }
-
         $db = \Database::connection();
 
         try {
@@ -154,16 +206,34 @@ final class SaleController extends Controller
             $stock->releaseSale($id, 'return', 'تعديل البيع #' . $id);
             (new CashMovement())->deleteByReference('sale', $id);
 
-            (new Sale())->update($id, $new);
+            $saleModel->deleteItems($id);
+            $saleModel->update($id, [
+                'distributor_id' => $meta['distributor_id'],
+                'package_id'     => null,
+                'bundles_count'  => 0,
+                'bundle_price'   => 0,
+                'total'          => $meta['total'],
+                'payment_type'   => $meta['payment_type'],
+                'note'           => $meta['note'],
+            ]);
 
-            if ($stock->consume((int)$new['package_id'], (int)$new['bundles_count'], $id) === null) {
-                throw new \RuntimeException('insufficient_stock');
+            foreach ($items as $item) {
+                if ($stock->consume((int)$item['package_id'], (int)$item['bundles_count'], $id) === null) {
+                    throw new \RuntimeException('insufficient_stock');
+                }
+                $saleModel->createItem([
+                    'sale_id'       => $id,
+                    'package_id'    => $item['package_id'],
+                    'bundles_count' => $item['bundles_count'],
+                    'bundle_price'  => $item['bundle_price'],
+                    'total'         => $item['total'],
+                ]);
             }
 
-            if ($new['payment_type'] === 'cash') {
+            if ($meta['payment_type'] === 'cash') {
                 (new CashMovement())->create([
                     'direction'      => CashMovement::IN,
-                    'amount'         => $new['total'],
+                    'amount'         => $meta['total'],
                     'reason'         => 'بيع كروت (نقدي)',
                     'reference_type' => 'sale',
                     'reference_id'   => $id,
@@ -179,11 +249,15 @@ final class SaleController extends Controller
         }
 
         $oldType = $old['payment_type'] === 'cash' ? 'نقدي' : 'آجل';
-        $newType = $new['payment_type'] === 'cash' ? 'نقدي' : 'آجل';
+        $newType = $meta['payment_type'] === 'cash' ? 'نقدي' : 'آجل';
+        $summary = implode(' + ', array_map(
+            static fn ($i) => $i['bundles_count'] . '×' . $i['package_name'] . '@' . $i['bundle_price'],
+            $items
+        ));
         $this->logAudit(
             'sale_update',
-            "تعديل بيع: من {$old['bundles_count']} شدة / {$old['total']} {$oldType} إلى {$new['bundles_count']} شدة / {$new['total']} {$newType}",
-            ['old' => $old, 'new' => $new]
+            "تعديل بيع #{$id}: من {$old['total']} {$oldType} إلى {$meta['total']} {$newType} ({$summary})",
+            ['old' => $old, 'items' => $items, 'meta' => $meta]
         );
 
         $this->redirect('/sales');
@@ -200,6 +274,12 @@ final class SaleController extends Controller
             if (!$sale) {
                 $this->redirect('/sales');
             }
+
+            // Capture the itemized summary BEFORE deletion cascades the rows.
+            $summary = implode(' + ', array_map(
+                static fn ($i) => $i['bundles_count'] . '×' . $i['package_name'],
+                (new Sale())->items($id)
+            ));
 
             $db = \Database::connection();
 
@@ -221,64 +301,108 @@ final class SaleController extends Controller
             }
 
             $type = $sale['payment_type'] === 'cash' ? 'نقدي' : 'آجل';
-            $this->logAudit('sale_delete', "حذف عملية بيع #{$id}: {$sale['bundles_count']} شدة / {$sale['total']} {$type}");
+            $this->logAudit('sale_delete', "حذف عملية بيع #{$id}: {$summary} / {$sale['total']} {$type}");
         }
 
         $this->redirect('/sales');
     }
 
     /**
-     * Validate sale input.
-     * Cash sales may have no distributor. If a distributor is selected for a
-     * cash sale, it is kept only as a reference and is NOT included in debt.
-     * The authoritative bundle price always comes from the package record.
+     * Validate a multi-package sale.
+     * Reads package_id[] / bundles_count[] arrays — each item keeps its own
+     * bundle price taken from the package record. Items of the SAME package
+     * are merged into one. Cash sales may have no distributor; a distributor
+     * on a cash sale is kept only as a reference and is NOT included in debt.
+     * Returns [items|null, meta]; flashes an error message when invalid.
      */
-    private function validateSaleInput(Request $request, bool $allowInactivePackage = false): ?array
+    private function validateSaleItems(Request $request, bool $allowInactivePackage = false): array
     {
-        $packageId     = (int)$request->input('package_id', 0);
+        $packageIds    = array_values(array_filter(array_map('intval', (array)$request->input('package_id', []))));
+        $bundlesCounts = array_map('intval', (array)$request->input('bundles_count', []));
         $distributorId = (int)$request->input('distributor_id', 0);
-        $bundlesCount  = (int)$request->input('bundles_count', 0);
         $paymentType   = (string)$request->input('payment_type', 'cash');
         $note          = (string)$request->input('note', '');
 
-        if ($packageId <= 0 || $bundlesCount <= 0 || !in_array($paymentType, ['cash', 'credit'], true)) {
-            return null;
-        }
+        $packageModel     = new Package();
+        $distributorModel = new Distributor();
 
-        $package = (new Package())->find($packageId);
-        if ($package === null) {
-            return null;
-        }
-        if (!$allowInactivePackage && $package['status'] !== 'active') {
-            return null;
+        $error = static function (string $message): array {
+            Session::flash('error', $message);
+            return [null, null];
+        };
+
+        if (count($packageIds) === 0 || !in_array($paymentType, ['cash', 'credit'], true)) {
+            return $error('بيانات البيع غير صحيحة — اختر باقة واحدة على الأقل');
         }
 
         if ($paymentType === 'credit' && $distributorId <= 0) {
-            return null;
+            return $error('البيع الآجل يتطلب اختيار الموزع');
         }
 
-        if ($distributorId > 0 && (new Distributor())->find($distributorId) === null) {
-            return null;
+        if ($distributorId > 0 && $distributorModel->find($distributorId) === null) {
+            return $error('الموزع غير موجود');
         }
 
-        $bundlePrice = (int)$package['bundle_price'];
-        if ($bundlePrice <= 0) {
-            return null;
+        // Merge repeated packages and validate each item.
+        $merged = [];
+        foreach ($packageIds as $i => $packageId) {
+            $bundles = $bundlesCounts[$i] ?? 0;
+            if ($packageId <= 0) {
+                continue;
+            }
+
+            $package = $packageModel->find($packageId);
+            if ($package === null) {
+                return $error('إحدى الباقات غير موجودة');
+            }
+            if (!$allowInactivePackage && $package['status'] !== 'active') {
+                return $error('الباقة «' . $package['name'] . '» غير نشطة');
+            }
+
+            $bundlePrice = (int)$package['bundle_price'];
+            if ($bundlePrice <= 0) {
+                return $error('سعر الشدة غير صحيح للباقة «' . $package['name'] . '»');
+            }
+
+            $key = $packageId;
+            if (isset($merged[$key])) {
+                $merged[$key]['bundles_count'] += $bundles;
+            } else {
+                $merged[$key] = [
+                    'package_id'    => $packageId,
+                    'package_name'  => $package['name'],
+                    'bundle_price'  => $bundlePrice,
+                    'bundles_count' => $bundles,
+                ];
+            }
         }
 
-        $total = $bundlesCount * $bundlePrice;
+        if (count($merged) === 0) {
+            return $error('بيانات البيع غير صحيحة — اختر باقة واحدة على الأقل');
+        }
+
+        $items = [];
+        $total = 0;
+        foreach ($merged as $item) {
+            if ($item['bundles_count'] <= 0) {
+                return $error('عدد الشدات يجب أن يكون أكبر من صفر لكل باقة');
+            }
+            $item['total'] = (int)$item['bundles_count'] * (int)$item['bundle_price'];
+            $total += $item['total'];
+            $items[] = $item;
+        }
+
         if ($total <= 0) {
-            return null;
+            return $error('إجمالي البيع غير صحيح');
         }
 
-        return [
+        $meta = [
             'distributor_id' => $distributorId > 0 ? $distributorId : null,
-            'package_id'     => $packageId,
-            'bundles_count'  => $bundlesCount,
-            'bundle_price'   => $bundlePrice,
             'total'          => $total,
             'payment_type'   => $paymentType,
             'note'           => $note !== '' ? $note : null,
         ];
+
+        return [$items, $meta];
     }
 }

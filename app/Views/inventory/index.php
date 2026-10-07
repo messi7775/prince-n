@@ -134,7 +134,7 @@
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th>التاريخ والوقت</th>
+                        <th>التاريخ</th>
                         <th>الباقة</th>
                         <th>الدفعة</th>
                         <th>نوع الحركة</th>
@@ -149,7 +149,7 @@
                 <tbody>
                     <?php foreach ($movements as $m): ?>
                     <tr>
-                        <td><?= e($m['created_at']) ?></td>
+                        <td><?= ar_date($m['created_at']) ?></td>
                         <td><?= e($m['package_name']) ?></td>
                         <td><?= $m['inventory_id'] !== null ? '#' . (int)$m['inventory_id'] : '—' ?></td>
                         <td>

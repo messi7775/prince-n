@@ -113,7 +113,7 @@
                 <div class="empty-state">لا توجد مبيعات مطابقة</div>
             <?php else: ?>
                 <table class="data-table">
-                    <thead><tr><th>التاريخ</th><th>الموزع</th><th>الباقة</th><th>الشدات</th><th>سعر(ش)</th><th>الإجمالي</th><th>النوع</th><th>ملاحظة</th></tr></thead>
+                    <thead><tr><th>التاريخ</th><th>الموزع</th><th>الباقات</th><th>الشدات</th><th>سعر(ش)</th><th>الإجمالي</th><th>النوع</th><th>ملاحظة</th></tr></thead>
                     <tbody>
                         <?php foreach ($data['rows'] as $s): ?>
                         <tr>
@@ -121,7 +121,7 @@
                             <td><?= e($s['distributor_name'] ?? 'نقدي') ?></td>
                             <td><?= e($s['package_name'] ?? '') ?></td>
                             <td><?= int_num($s['bundles_count']) ?></td>
-                            <td><?= money($s['bundle_price']) ?></td>
+                            <td><?= (int)($s['items_count'] ?? 1) === 1 ? money($s['item_price'] ?? $s['bundle_price']) : 'متنوعة' ?></td>
                             <td><?= money($s['total']) ?></td>
                             <td><?= $s['payment_type'] === 'cash' ? 'نقدي' : 'آجل' ?></td>
                             <td><?= e($s['note'] ?? '') ?></td>

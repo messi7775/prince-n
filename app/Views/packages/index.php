@@ -26,6 +26,10 @@
                     </label>
                     <label>حد التنبيه (عدد الشدات)<input name="low_stock_threshold" type="number" min="0" value="5" required></label>
                 </div>
+                <div class="inv-opt-row">
+                    <label class="inv-opt-toggle"><input type="checkbox" name="create_inventory" id="pkg-create-inventory" value="1"> إضافة مخزون للباقة (اختياري)</label>
+                    <label id="pkg-initial-qty-wrap" style="display:none">عدد الشدات<input name="initial_quantity" id="pkg-initial-qty" type="number" min="1" value="1" disabled></label>
+                </div>
                 <button class="btn primary" type="submit">حفظ</button>
             </form>
         </details>
@@ -66,3 +70,17 @@
         <?php endif; ?>
     </section>
 </div>
+
+<script>
+(function() {
+    var toggle = document.getElementById('pkg-create-inventory');
+    var wrap   = document.getElementById('pkg-initial-qty-wrap');
+    var qty    = document.getElementById('pkg-initial-qty');
+    if (!toggle) return;
+    toggle.addEventListener('change', function() {
+        wrap.style.display = toggle.checked ? '' : 'none';
+        qty.disabled = !toggle.checked;
+        if (!toggle.checked) qty.value = '';
+    });
+})();
+</script>

@@ -464,6 +464,40 @@ COMMIT;
 SET AUTOCOMMIT=@OLD_AUTOCOMMIT;
 
 --
+-- Table structure for table `sale_items`
+--
+
+DROP TABLE IF EXISTS `sale_items`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `sale_items` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `sale_id` int(10) unsigned NOT NULL,
+  `package_id` int(10) unsigned NOT NULL,
+  `bundles_count` int(11) NOT NULL DEFAULT 0,
+  `bundle_price` int(11) NOT NULL DEFAULT 0,
+  `total` int(11) NOT NULL DEFAULT 0,
+  PRIMARY KEY (`id`),
+  KEY `fk_item_sale` (`sale_id`),
+  KEY `fk_item_package` (`package_id`),
+  CONSTRAINT `fk_item_package` FOREIGN KEY (`package_id`) REFERENCES `packages` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_item_sale` FOREIGN KEY (`sale_id`) REFERENCES `sales` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `sale_items`
+--
+
+SET @OLD_AUTOCOMMIT=@@AUTOCOMMIT, @@AUTOCOMMIT=0;
+LOCK TABLES `sale_items` WRITE;
+/*!40000 ALTER TABLE `sale_items` DISABLE KEYS */;
+/*!40000 ALTER TABLE `sale_items` ENABLE KEYS */;
+UNLOCK TABLES;
+COMMIT;
+SET AUTOCOMMIT=@OLD_AUTOCOMMIT;
+
+--
 -- Dumping events for database 'if0_43097781_prince'
 --
 

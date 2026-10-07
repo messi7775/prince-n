@@ -75,6 +75,11 @@ final class DistributorController extends Controller
             $this->redirect('/distributors');
         }
 
+        if ((new Distributor())->findByName($name) !== null) {
+            \Session::flash('error', 'يوجد موزع بنفس الاسم بالفعل: ' . $name);
+            $this->redirect('/distributors');
+        }
+
         $data = [
             'name'  => $name,
             'phone' => $phone ?: null,

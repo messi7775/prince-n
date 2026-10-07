@@ -27,7 +27,7 @@
         <article class="kpi-card <?= $finalBalance > 0 ? 'pink' : 'teal' ?>"><div class="kpi-content"><span>الرصيد النهائي</span><strong><?= money($finalBalance) ?></strong></div></article>
     </section>
 
-    <section class="dashboard-panel">
+    <section class="dashboard-panel no-print">
         <div class="section-title"><h3>البحث والفلترة</h3><span>⌕</span></div>
         <form method="get" action="/distributors/show" class="entity-form">
             <input type="hidden" name="id" value="<?= (int)$distributor['id'] ?>">
@@ -87,3 +87,7 @@
         <?php endif; ?>
     </section>
 </div>
+
+<?php if ((string)($_GET['print'] ?? '') === '1'): ?>
+<script>window.addEventListener('load', function() { window.print(); });</script>
+<?php endif; ?>

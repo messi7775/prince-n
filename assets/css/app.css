@@ -135,6 +135,70 @@ html[data-theme="dark"] .icon-btn .moon{display:none}
 .dashboard-title h2{font-size:25px;margin:0;font-weight:800;letter-spacing:-.2px}
 .dashboard-title p{color:var(--muted);font-size:14px;margin:3px 0 0}
 
+/* ---------- Sale form (redesigned) ---------- */
+.sale-form-section{
+  border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;margin-bottom:14px;
+  background:var(--surface-2)
+}
+.sale-section-label{font-size:13px;font-weight:800;color:var(--primary);margin-bottom:10px}
+.form-grid.cols-sale{grid-template-columns:1fr 1fr 2fr;align-items:end}
+.form-grid.cols-sale .grow-2{grid-column:span 2}
+.sale-items-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
+.sale-items-table{display:flex;flex-direction:column;gap:8px}
+.sale-items-header,.sale-item-row{
+  display:grid;grid-template-columns:2fr 96px 110px 90px 34px;gap:8px;align-items:center
+}
+.sale-items-header{
+  font-size:12px;font-weight:700;color:var(--muted);padding:0 4px;
+  border-bottom:1px solid var(--line);padding-bottom:6px
+}
+.sale-item-row{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-sm);padding:10px 10px}
+.sale-item-row .item-bundles,.sale-item-row .item-price{width:100%}
+.sale-item-row select,.sale-item-row input{
+  background:var(--surface);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:8px 10px
+}
+.sale-item-row select option{background:var(--surface);color:var(--text)}
+.sale-item-row select:focus,.sale-item-row input:focus{
+  outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft)
+}
+.si-field{display:flex;flex-direction:column;gap:4px;min-width:0}
+.si-label{display:none;font-size:11.5px;font-weight:700;color:var(--muted)}
+.si-package select{width:100%}
+.item-stock{font-size:11.5px;color:var(--muted);min-height:14px}
+.item-sum{font-weight:800;font-size:14px;color:var(--text);text-align:left}
+.sale-remove-item{
+  width:34px;height:34px;border:1px solid var(--line);border-radius:8px;background:var(--surface-2);
+  color:var(--danger);cursor:pointer;font-size:14px;flex:0 0 34px;transition:background .15s
+}
+.sale-remove-item:hover{background:var(--danger-soft);border-color:var(--danger)}
+.sale-items-empty{padding:14px;text-align:center;color:var(--muted);font-size:13.5px}
+.sale-summary{
+  display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
+  padding:14px 16px;border:1px solid var(--line);border-radius:var(--radius);
+  background:linear-gradient(90deg,var(--primary-soft),var(--accent-soft))
+}
+.sale-summary-rows{display:flex;gap:22px;flex-wrap:wrap}
+.sale-summary-row{display:flex;flex-direction:column;gap:2px;font-size:12.5px;font-weight:600;color:var(--muted)}
+.sale-summary-row strong{font-size:16px;color:var(--text)}
+.sale-summary-row.total strong{color:var(--primary);font-size:21px;font-weight:800}
+.sale-summary-actions .btn{min-width:150px}
+@media(max-width:700px){
+  .form-grid.cols-sale{grid-template-columns:1fr}
+  .form-grid.cols-sale .grow-2{grid-column:auto}
+  .sale-items-header{display:none}
+  .sale-item-row{grid-template-columns:1fr 1fr;position:relative;padding:34px 12px 12px}
+  .si-label{display:block}
+  .si-package{grid-column:1 / -1}
+  .sale-remove-item{position:absolute;top:8px;inset-inline-end:8px;width:28px;height:28px;flex-basis:28px}
+  .sale-summary{flex-direction:column;align-items:stretch}
+  .sale-summary-actions .btn{width:100%}
+}
+
+/* ---------- Optional inventory toggle (package form) ---------- */
+.inv-opt-row{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:14px}
+.inv-opt-toggle{display:flex;align-items:center;gap:8px;font-weight:600;margin:0}
+.inv-opt-row label[for],.inv-opt-row > label:not(.inv-opt-toggle){display:flex;flex-direction:column;gap:6px;margin:0}
+
 /* ---------- KPI cards ---------- */
 .kpi-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:18px}
 .kpi-grid.cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -521,7 +585,7 @@ select option{background:var(--surface-2);color:var(--text)}
 @media print{
   body{background:#fff !important;color:#000 !important}
   .sidebar,.topbar,.mobile-bottom-nav,.sidebar-overlay,
-  .kpi-grid,.form-collapse,.alert-panel,
+  .kpi-grid,.form-collapse,.alert-panel,.no-print,
   .section-title .btn,.entity-form{display:none !important}
   .main-content{margin:0 !important;padding:0 !important}
   .dashboard-panel{box-shadow:none !important;border:none !important;padding:0 !important}

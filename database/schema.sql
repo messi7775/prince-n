@@ -87,7 +87,26 @@ CREATE TABLE IF NOT EXISTS distributors (
     phone VARCHAR(32) NULL,
     note VARCHAR(255) NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_distributors_name (name)
+) ENGINE=InnoDB DEFAULT CHARACTER SET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ---------------------------------------------------------------------------
+-- Sale items — packages inside ONE sale operation (multi-package sale).
+-- Each row = one package with its bundle count and its own bundle price;
+-- sales.total (header) = SUM(items.total).
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS sale_items (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    sale_id INT UNSIGNED NOT NULL,
+    package_id INT UNSIGNED NOT NULL,
+    bundles_count INT NOT NULL DEFAULT 0,
+    bundle_price INT NOT NULL DEFAULT 0,
+    total INT NOT NULL DEFAULT 0,
+    CONSTRAINT fk_item_sale
+        FOREIGN KEY (sale_id) REFERENCES sales(id) ON DELETE CASCADE,
+    CONSTRAINT fk_item_package
+        FOREIGN KEY (package_id) REFERENCES packages(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARACTER SET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ---------------------------------------------------------------------------

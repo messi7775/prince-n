@@ -62,6 +62,7 @@
                                 <button class="kebab-btn" type="button" aria-label="إجراءات">⋮</button>
                                 <div class="kebab-dropdown">
                                     <a class="kebab-item" href="/distributors/show?id=<?= (int)$d['id'] ?>">📄 كشف الحساب</a>
+                                    <a class="kebab-item" href="/distributors/show?id=<?= (int)$d['id'] ?>&print=1" target="_blank">🖨 طباعة كشف الحساب</a>
                                     <form method="post" action="/distributors/delete" class="inline-form" onsubmit="return confirm('حذف هذا الموزع؟')">
                                         <?= csrf_field() ?>
                                         <input type="hidden" name="id" value="<?= (int)$d['id'] ?>">
