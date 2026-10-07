@@ -3,6 +3,9 @@ declare(strict_types=1);
 
 define('APP_ROOT', __DIR__);
 
+// All displayed/recorded times follow Mecca (Asia/Riyadh) time.
+date_default_timezone_set('Asia/Riyadh');
+
 require APP_ROOT . '/vendor/Core/autoload.php';
 require APP_ROOT . '/config/database.php';
 

@@ -80,6 +80,11 @@ final class Distributor extends Model
         return $this->fetchOne('SELECT * FROM distributors WHERE id = ?', [$id]);
     }
 
+    public function findByName(string $name): ?array
+    {
+        return $this->fetchOne('SELECT * FROM distributors WHERE name = ? LIMIT 1', [$name]);
+    }
+
     public function create(array $data): int
     {
         return $this->insert('distributors', $data);
@@ -216,7 +221,12 @@ final class Distributor extends Model
         $ledger = $this->fetchAll(
             "SELECT * FROM (
                 SELECT s.id AS ref_id, 'sale' AS kind, s.created_at,
-                       CONCAT('بيع آجل — ', s.bundles_count, ' شدة × ', s.bundle_price) AS description,
+                       CONCAT('بيع آجل — ',
+                           (SELECT GROUP_CONCAT(CONCAT(p2.name, ' — ', si2.bundles_count, ' شدة × ', si2.bundle_price) SEPARATOR ' + ')
+                              FROM sale_items si2
+                              JOIN packages p2 ON p2.id = si2.package_id
+                             WHERE si2.sale_id = s.id)
+                       ) AS description,
                        s.total AS debit, 0 AS credit
                   FROM sales s
                  WHERE s.distributor_id = :id1

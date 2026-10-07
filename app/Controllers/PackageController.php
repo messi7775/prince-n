@@ -34,9 +34,16 @@ final class PackageController extends Controller
         $bundlePrice = (int)$request->input('bundle_price', 0);
         $status      = (string)$request->input('status', 'active');
         $threshold   = (int)$request->input('low_stock_threshold', 5);
+        $withStock   = (string)$request->input('create_inventory', '') === '1';
+        $stockQty    = (int)$request->input('initial_quantity', 0);
 
         if ($name === '' || $bundlePrice <= 0 || !in_array($status, ['active', 'inactive'], true) || $threshold < 0) {
             Session::set('package_error', 'بيانات الباقة غير صحيحة');
+            $this->redirect('/packages');
+        }
+
+        if ($withStock && $stockQty <= 0) {
+            Session::set('package_error', 'عند تفعيل إضافة المخزون يجب إدخال عدد الشدات');
             $this->redirect('/packages');
         }
 
@@ -58,15 +65,29 @@ final class PackageController extends Controller
 
             $packageId = (new Package())->create($data);
 
-            // Business rule: a new package starts with 5 bundles automatically.
-            (new Inventory())->create([
-                'package_id'   => $packageId,
-                'quantity'     => 5,
-                'sold'         => 0,
-                'bundle_price' => $bundlePrice,
-                'status'       => 'active',
-                'note'         => 'الدفعة الافتتاحية',
-            ]);
+            // Optional opening stock: created ONLY when explicitly enabled.
+            if ($withStock) {
+                $inventory = new Inventory();
+                $batchId = $inventory->create([
+                    'package_id'   => $packageId,
+                    'quantity'     => $stockQty,
+                    'sold'         => 0,
+                    'bundle_price' => $bundlePrice,
+                    'status'       => 'active',
+                    'note'         => 'الدفعة الافتتاحية',
+                ]);
+                $inventory->logMovement([
+                    'package_id'   => $packageId,
+                    'inventory_id' => $batchId,
+                    'action'       => 'add',
+                    'old_quantity' => 0,
+                    'new_quantity' => $stockQty,
+                    'bundle_price' => $bundlePrice,
+                    'old_value'    => 0,
+                    'new_value'    => $stockQty * $bundlePrice,
+                    'note'         => 'الدفعة الافتتاحية: ' . $stockQty . ' شدة',
+                ]);
+            }
 
             $db->commit();
         } catch (\Throwable $e) {

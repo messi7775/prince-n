@@ -50,13 +50,32 @@
 
         <table class="receipt-table">
             <tr><th>الموزع</th><td><?= e($sale['distributor_name'] ?? '— بيع نقدي —') ?></td></tr>
-            <tr><th>الباقة</th><td><?= e($sale['package_name'] ?? '') ?></td></tr>
-            <tr><th>عدد الشدات</th><td><?= int_num($sale['bundles_count']) ?></td></tr>
-            <tr><th>سعر الشدة</th><td><?= money($sale['bundle_price']) ?></td></tr>
             <tr><th>نوع البيع</th><td><?= $sale['payment_type'] === 'cash' ? 'نقدي' : 'آجل' ?></td></tr>
             <?php if (!empty($sale['note'])): ?>
             <tr><th>ملاحظات</th><td><?= e($sale['note']) ?></td></tr>
             <?php endif; ?>
+        </table>
+
+        <table class="receipt-table receipt-items">
+            <thead>
+                <tr><th>الباقة</th><th>الشدات</th><th>سعر الشدة</th><th>المجموع</th></tr>
+            </thead>
+            <tbody>
+                <?php $itemRows = !empty($items) ? $items : [[
+                    'package_name'  => $sale['package_name'] ?? '',
+                    'bundles_count' => $sale['bundles_count'],
+                    'bundle_price'  => $sale['bundle_price'],
+                    'total'         => $sale['total'],
+                ]]; ?>
+                <?php foreach ($itemRows as $it): ?>
+                <tr>
+                    <td><?= e($it['package_name']) ?></td>
+                    <td><?= int_num($it['bundles_count']) ?></td>
+                    <td><?= money($it['bundle_price']) ?></td>
+                    <td><?= money($it['total']) ?></td>
+                </tr>
+                <?php endforeach; ?>
+            </tbody>
         </table>
 
         <div class="receipt-total">

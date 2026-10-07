@@ -7,6 +7,7 @@ services:
       MYSQL_USER: prince
       MYSQL_PASSWORD: prince_pass
       MYSQL_ROOT_PASSWORD: root_pass
+      TZ: Asia/Riyadh
     volumes:
       - dbdata:/var/lib/mysql
       - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
@@ -30,6 +31,7 @@ services:
       DB_USER: prince
       DB_PASS: prince_pass
       DB_PORT: "3306"
+      TZ: Asia/Riyadh
     volumes:
       - ./:/var/www/html
     depends_on:

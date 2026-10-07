@@ -20,14 +20,6 @@
                 <?= csrf_field() ?>
                 <input type="hidden" name="id" id="sale-id" value="">
                 <div class="form-grid">
-                    <label>الباقة
-                        <select name="package_id" id="sale-package" required>
-                            <option value="">— اختر —</option>
-                            <?php foreach ($packages as $p): ?>
-                                <option value="<?= (int)$p['id'] ?>" data-bundle-price="<?= (int)$p['bundle_price'] ?>"><?= e($p['name']) ?> — شدة <?= money($p['bundle_price']) ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </label>
                     <label>الموزع
                         <select name="distributor_id" id="sale-distributor">
                             <option value="">— اختر موزع —</option>
@@ -37,8 +29,6 @@
                             <?php endforeach; ?>
                         </select>
                     </label>
-                    <label>عدد الشدات<input name="bundles_count" id="sale-bundles" type="number" min="1" required value="1"></label>
-                    <label>سعر الشدة (ريال)<input id="sale-price" type="number" min="0" readonly></label>
                     <label>نوع البيع
                         <select name="payment_type" id="sale-type">
                             <option value="cash">نقدي</option>
@@ -46,6 +36,23 @@
                         </select>
                     </label>
                     <label>ملاحظة<input name="note" id="sale-note" placeholder="اختياري"></label>
+                </div>
+                <div class="sale-items-block">
+                    <div class="sale-items-head"><strong>الباقات المبيعة</strong><button class="btn sm" type="button" id="sale-add-item">+ إضافة باقة</button></div>
+                    <div id="sale-items-rows"></div>
+                    <template id="sale-item-tpl">
+                        <div class="sale-item-row">
+                            <select name="package_id[]" class="item-package" required>
+                                <option value="">— اختر —</option>
+                                <?php foreach ($packages as $p): ?>
+                                    <option value="<?= (int)$p['id'] ?>" data-bundle-price="<?= (int)$p['bundle_price'] ?>"><?= e($p['name']) ?> — شدة <?= money($p['bundle_price']) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                            <input name="bundles_count[]" class="item-bundles" type="number" min="1" value="1" required title="عدد الشدات">
+                            <input class="item-price" type="number" min="0" readonly tabindex="-1" title="سعر الشدة">
+                            <button type="button" class="btn sm sale-remove-item" title="إزالة الباقة">✕</button>
+                        </div>
+                    </template>
                 </div>
                 <div class="sale-total">الإجمالي: <strong id="sale-total-display">0</strong> ريال</div>
                 <button class="btn primary" type="submit" id="sale-submit-btn">تسجيل البيع</button>
@@ -135,7 +142,7 @@
                         <td><?= e($s['distributor_name'] ?? '') ?></td>
                         <td><?= e($s['package_name'] ?? '') ?></td>
                         <td><?= int_num($s['bundles_count']) ?></td>
-                        <td><?= money($s['bundle_price']) ?></td>
+                        <td><?= (int)($s['items_count'] ?? 1) === 1 ? money($s['item_price'] ?? $s['bundle_price']) : 'متنوعة' ?></td>
                         <td><?= money($s['total']) ?></td>
                         <td><span class="badge <?= $typeBadge ?>"><?= $typeLabel ?></span></td>
                         <td class="actions-cell">
@@ -148,6 +155,7 @@
                                         data-package="<?= (int)$s['package_id'] ?>"
                                         data-distributor="<?= (int)$s['distributor_id'] ?>"
                                         data-bundles="<?= (int)$s['bundles_count'] ?>"
+                                        data-items="<?= e(json_encode($itemsBySale[(int)$s['id']] ?? [], JSON_UNESCAPED_UNICODE)) ?>"
                                         data-type="<?= e($s['payment_type']) ?>"
                                         data-note="<?= e($s['note'] ?? '') ?>">✎ تعديل</button>
                                     <form method="post" action="/sales/delete" class="inline-form" onsubmit="return confirm('حذف هذه العملية؟')">
@@ -185,48 +193,88 @@
     var collapse  = document.getElementById('sale-form-collapse');
     var summary   = document.getElementById('sale-form-summary');
     var idField   = document.getElementById('sale-id');
-    var pkg       = document.getElementById('sale-package');
-    var bundles   = document.getElementById('sale-bundles');
-    var price     = document.getElementById('sale-price');
     var note      = document.getElementById('sale-note');
     var type      = document.getElementById('sale-type');
     var distributor = document.getElementById('sale-distributor');
     var display   = document.getElementById('sale-total-display');
     var submitBtn = document.getElementById('sale-submit-btn');
+    var rows      = document.getElementById('sale-items-rows');
+    var tpl       = document.getElementById('sale-item-tpl');
+    var addBtn    = document.getElementById('sale-add-item');
 
     function calc() {
-        var b = parseInt(bundles.value) || 0;
-        var p = parseInt(price.value) || 0;
-        var total = b * p;
+        var total = 0;
+        rows.querySelectorAll('.sale-item-row').forEach(function(row) {
+            var b = parseInt(row.querySelector('.item-bundles').value) || 0;
+            var p = parseInt(row.querySelector('.item-price').value) || 0;
+            total += b * p;
+        });
         display.textContent = total.toLocaleString();
     }
 
-    pkg.addEventListener('change', function() {
-        var opt = pkg.options[pkg.selectedIndex];
-        var bp = opt.getAttribute('data-bundle-price');
-        if (bp) price.value = bp;
-        calc();
-    });
-    bundles.addEventListener('input', calc);
+    function bindRow(row) {
+        var pkg = row.querySelector('.item-package');
+        pkg.addEventListener('change', function() {
+            var opt = pkg.options[pkg.selectedIndex];
+            row.querySelector('.item-price').value = opt.getAttribute('data-bundle-price') || '';
+            calc();
+        });
+        row.querySelector('.item-bundles').addEventListener('input', calc);
+        row.querySelector('.sale-remove-item').addEventListener('click', function() {
+            row.remove();
+            if (rows.querySelectorAll('.sale-item-row').length === 0) addRow();
+            calc();
+        });
+    }
+
+    function addRow(pre) {
+        pre = pre || {};
+        var row = tpl.content.firstElementChild.cloneNode(true);
+        if (pre.package_id) row.querySelector('.item-package').value = String(pre.package_id);
+        if (pre.bundles_count) row.querySelector('.item-bundles').value = pre.bundles_count;
+        if (pre.package_id) {
+            var opt = row.querySelector('.item-package').selectedOptions[0];
+            row.querySelector('.item-price').value = (opt && opt.getAttribute('data-bundle-price')) || '';
+        }
+        bindRow(row);
+        rows.appendChild(row);
+        return row;
+    }
+
+    addBtn.addEventListener('click', function() { addRow(); });
     type.addEventListener('change', function() {
         distributor.required = type.value === 'credit';
-        calc();
     });
     distributor.required = type.value === 'credit';
-    calc();
+    addRow();
+
+    function resetForm() {
+        idField.value = '';
+        form.action = '/sales/store';
+        submitBtn.textContent = 'تسجيل البيع';
+        summary.textContent = '+ عملية بيع جديدة';
+        rows.innerHTML = '';
+        addRow();
+        calc();
+    }
 
     // Edit button handler
     document.querySelectorAll('.sale-edit-btn').forEach(function(btn) {
         btn.addEventListener('click', function() {
-            idField.value      = btn.dataset.id;
-            pkg.value           = btn.dataset.package;
-            distributor.value = btn.dataset.distributor || '';
+            idField.value       = btn.dataset.id;
+            distributor.value   = btn.dataset.distributor || '';
             distributor.required = btn.dataset.type === 'credit';
-            bundles.value       = btn.dataset.bundles;
-            var selectedOption = pkg.options[pkg.selectedIndex];
-            price.value         = selectedOption ? (selectedOption.getAttribute('data-bundle-price') || '') : '';
             type.value          = btn.dataset.type;
             note.value          = btn.dataset.note;
+
+            rows.innerHTML = '';
+            var items;
+            try { items = JSON.parse(btn.dataset.items || '[]'); } catch (e) { items = []; }
+            if (items.length > 0) {
+                items.forEach(function(it) { addRow(it); });
+            } else {
+                addRow({ package_id: btn.dataset.package, bundles_count: btn.dataset.bundles });
+            }
 
             form.action         = '/sales/update';
             submitBtn.textContent = 'حفظ التعديل';

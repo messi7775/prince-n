@@ -135,6 +135,21 @@ html[data-theme="dark"] .icon-btn .moon{display:none}
 .dashboard-title h2{font-size:25px;margin:0;font-weight:800;letter-spacing:-.2px}
 .dashboard-title p{color:var(--muted);font-size:14px;margin:3px 0 0}
 
+/* ---------- Multi-package sale items ---------- */
+.sale-items-block{margin-bottom:14px}
+.sale-items-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.sale-item-row{display:grid;grid-template-columns:2fr 90px 110px 34px;gap:8px;align-items:center;margin-bottom:8px}
+.sale-item-row .item-bundles,.sale-item-row .item-price{width:100%}
+.sale-item-row select,.sale-item-row input{
+  background:var(--surface);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:8px 10px
+}
+.sale-item-row select option{background:var(--surface);color:var(--text)}
+
+/* ---------- Optional inventory toggle (package form) ---------- */
+.inv-opt-row{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:14px}
+.inv-opt-toggle{display:flex;align-items:center;gap:8px;font-weight:600;margin:0}
+.inv-opt-row label[for],.inv-opt-row > label:not(.inv-opt-toggle){display:flex;flex-direction:column;gap:6px;margin:0}
+
 /* ---------- KPI cards ---------- */
 .kpi-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:18px}
 .kpi-grid.cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -521,7 +536,7 @@ select option{background:var(--surface-2);color:var(--text)}
 @media print{
   body{background:#fff !important;color:#000 !important}
   .sidebar,.topbar,.mobile-bottom-nav,.sidebar-overlay,
-  .kpi-grid,.form-collapse,.alert-panel,
+  .kpi-grid,.form-collapse,.alert-panel,.no-print,
   .section-title .btn,.entity-form{display:none !important}
   .main-content{margin:0 !important;padding:0 !important}
   .dashboard-panel{box-shadow:none !important;border:none !important;padding:0 !important}
