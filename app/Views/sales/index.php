@@ -16,46 +16,88 @@
     <section class="dashboard-panel">
         <details class="form-collapse" id="sale-form-collapse">
             <summary class="btn primary" id="sale-form-summary">+ عملية بيع جديدة</summary>
-            <form method="post" action="/sales/store" class="entity-form" id="sale-form">
+            <form method="post" action="/sales/store" class="entity-form sale-form" id="sale-form">
                 <?= csrf_field() ?>
                 <input type="hidden" name="id" id="sale-id" value="">
-                <div class="form-grid">
-                    <label>الموزع
-                        <select name="distributor_id" id="sale-distributor">
-                            <option value="">— اختر موزع —</option>
-                            <?php foreach ($distributors as $d): ?>
-                                <?php $bal = (int)$d['credit_total'] - (int)$d['paid_total']; ?>
-                                <option value="<?= (int)$d['id'] ?>"><?= e($d['name']) ?> — رصيد: <?= money($bal) ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </label>
-                    <label>نوع البيع
-                        <select name="payment_type" id="sale-type">
-                            <option value="cash">نقدي</option>
-                            <option value="credit">آجل</option>
-                        </select>
-                    </label>
-                    <label>ملاحظة<input name="note" id="sale-note" placeholder="اختياري"></label>
-                </div>
-                <div class="sale-items-block">
-                    <div class="sale-items-head"><strong>الباقات المبيعة</strong><button class="btn sm" type="button" id="sale-add-item">+ إضافة باقة</button></div>
-                    <div id="sale-items-rows"></div>
-                    <template id="sale-item-tpl">
-                        <div class="sale-item-row">
-                            <select name="package_id[]" class="item-package" required>
-                                <option value="">— اختر —</option>
-                                <?php foreach ($packages as $p): ?>
-                                    <option value="<?= (int)$p['id'] ?>" data-bundle-price="<?= (int)$p['bundle_price'] ?>"><?= e($p['name']) ?> — شدة <?= money($p['bundle_price']) ?></option>
+
+                <!-- 1) Sale info -->
+                <div class="sale-form-section">
+                    <div class="sale-section-label">بيانات العملية</div>
+                    <div class="form-grid cols-sale">
+                        <label>الموزع
+                            <select name="distributor_id" id="sale-distributor">
+                                <option value="">— بيع نقدي بدون موزع —</option>
+                                <?php foreach ($distributors as $d): ?>
+                                    <?php $bal = (int)$d['credit_total'] - (int)$d['paid_total']; ?>
+                                    <option value="<?= (int)$d['id'] ?>"><?= e($d['name']) ?> — رصيد: <?= money($bal) ?></option>
                                 <?php endforeach; ?>
                             </select>
-                            <input name="bundles_count[]" class="item-bundles" type="number" min="1" value="1" required title="عدد الشدات">
-                            <input class="item-price" type="number" min="0" readonly tabindex="-1" title="سعر الشدة">
-                            <button type="button" class="btn sm sale-remove-item" title="إزالة الباقة">✕</button>
-                        </div>
-                    </template>
+                        </label>
+                        <label>نوع البيع
+                            <select name="payment_type" id="sale-type">
+                                <option value="cash">نقدي</option>
+                                <option value="credit">آجل</option>
+                            </select>
+                        </label>
+                        <label class="grow-2">ملاحظة<input name="note" id="sale-note" placeholder="اختياري"></label>
+                    </div>
                 </div>
-                <div class="sale-total">الإجمالي: <strong id="sale-total-display">0</strong> ريال</div>
-                <button class="btn primary" type="submit" id="sale-submit-btn">تسجيل البيع</button>
+
+                <!-- 2) Packages being sold -->
+                <div class="sale-form-section">
+                    <div class="sale-items-head">
+                        <div class="sale-section-label">الباقات المبيعة <span class="badge blue" id="sale-items-count">0</span></div>
+                        <button class="btn sm accent" type="button" id="sale-add-item">+ إضافة باقة</button>
+                    </div>
+                    <div class="sale-items-table">
+                        <div class="sale-items-header">
+                            <span>الباقة</span><span>الشدات</span><span>سعر الشدة</span><span>المجموع</span><span></span>
+                        </div>
+                        <div id="sale-items-rows"></div>
+                        <template id="sale-item-tpl">
+                            <div class="sale-item-row">
+                                <div class="si-field si-package">
+                                    <span class="si-label">الباقة</span>
+                                    <select name="package_id[]" class="item-package" required>
+                                        <option value="">— اختر باقة —</option>
+                                        <?php foreach ($packages as $p): ?>
+                                            <option value="<?= (int)$p['id'] ?>"
+                                                data-bundle-price="<?= (int)$p['bundle_price'] ?>"
+                                                data-stock="<?= (int)($stockByPackage[(int)$p['id']] ?? 0) ?>"><?= e($p['name']) ?> — شدة <?= money($p['bundle_price']) ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                    <small class="item-stock"></small>
+                                </div>
+                                <div class="si-field">
+                                    <span class="si-label">الشدات</span>
+                                    <input name="bundles_count[]" class="item-bundles" type="number" min="1" value="1" required title="عدد الشدات">
+                                </div>
+                                <div class="si-field">
+                                    <span class="si-label">سعر الشدة</span>
+                                    <input class="item-price" type="number" min="0" readonly tabindex="-1" title="سعر الشدة">
+                                </div>
+                                <div class="si-field">
+                                    <span class="si-label">المجموع</span>
+                                    <span class="item-sum">0</span>
+                                </div>
+                                <button type="button" class="btn sm sale-remove-item" title="إزالة الباقة">✕</button>
+                            </div>
+                        </template>
+                    </div>
+                    <div class="sale-items-empty" id="sale-items-empty" hidden>لا توجد باقات — اضغط «إضافة باقة»</div>
+                </div>
+
+                <!-- 3) Summary + submit -->
+                <div class="sale-summary">
+                    <div class="sale-summary-rows">
+                        <div class="sale-summary-row"><span>عدد الباقات</span><strong id="sale-pkg-count">0</strong></div>
+                        <div class="sale-summary-row"><span>إجمالي الشدات</span><strong id="sale-bundles-display">0</strong></div>
+                        <div class="sale-summary-row total"><span>الإجمالي</span><strong><span id="sale-total-display">0</span> ر.ي</strong></div>
+                    </div>
+                    <div class="sale-summary-actions">
+                        <button class="btn primary" type="submit" id="sale-submit-btn">تسجيل البيع</button>
+                    </div>
+                </div>
             </form>
         </details>
     </section>
@@ -197,19 +239,40 @@
     var type      = document.getElementById('sale-type');
     var distributor = document.getElementById('sale-distributor');
     var display   = document.getElementById('sale-total-display');
+    var pkgCount  = document.getElementById('sale-pkg-count');
+    var bundlesDisplay = document.getElementById('sale-bundles-display');
+    var itemsCount = document.getElementById('sale-items-count');
+    var emptyHint = document.getElementById('sale-items-empty');
     var submitBtn = document.getElementById('sale-submit-btn');
     var rows      = document.getElementById('sale-items-rows');
     var tpl       = document.getElementById('sale-item-tpl');
     var addBtn    = document.getElementById('sale-add-item');
 
+    function fmt(n) { return (n || 0).toLocaleString('ar-EG'); }
+
     function calc() {
-        var total = 0;
+        var total = 0, bundles = 0, count = 0;
         rows.querySelectorAll('.sale-item-row').forEach(function(row) {
             var b = parseInt(row.querySelector('.item-bundles').value) || 0;
             var p = parseInt(row.querySelector('.item-price').value) || 0;
-            total += b * p;
+            var sum = b * p;
+            row.querySelector('.item-sum').textContent = fmt(sum);
+            total += sum;
+            bundles += b;
+            count++;
         });
-        display.textContent = total.toLocaleString();
+        display.textContent = fmt(total);
+        bundlesDisplay.textContent = fmt(bundles);
+        pkgCount.textContent = fmt(count);
+        itemsCount.textContent = fmt(count);
+        emptyHint.hidden = count > 0;
+    }
+
+    function updateStockHint(row) {
+        var pkg = row.querySelector('.item-package');
+        var opt = pkg.options[pkg.selectedIndex];
+        var stock = opt ? opt.getAttribute('data-stock') : null;
+        row.querySelector('.item-stock').textContent = (stock !== null && pkg.value !== '') ? ('المتوفر: ' + fmt(parseInt(stock) || 0) + ' شدة') : '';
     }
 
     function bindRow(row) {
@@ -217,6 +280,7 @@
         pkg.addEventListener('change', function() {
             var opt = pkg.options[pkg.selectedIndex];
             row.querySelector('.item-price').value = opt.getAttribute('data-bundle-price') || '';
+            updateStockHint(row);
             calc();
         });
         row.querySelector('.item-bundles').addEventListener('input', calc);
@@ -238,6 +302,8 @@
         }
         bindRow(row);
         rows.appendChild(row);
+        updateStockHint(row);
+        calc();
         return row;
     }
 
@@ -280,7 +346,6 @@
             submitBtn.textContent = 'حفظ التعديل';
             summary.textContent  = '✎ تعديل عملية بيع #' + btn.dataset.id;
 
-            calc();
             collapse.open = true;
             window.scrollTo({ top: 0, behavior: 'smooth' });
         });

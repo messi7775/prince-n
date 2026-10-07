@@ -40,17 +40,25 @@ final class SaleController extends Controller
             $itemsBySale[(int)$row['id']] = (new Sale())->items((int)$row['id']);
         }
 
+        // Available stock per package (display hint in the sale form).
+        $packages     = (new Package())->active();
+        $stockByPackage = [];
+        foreach ($packages as $pkg) {
+            $stockByPackage[(int)$pkg['id']] = (new Inventory())->availableForPackage((int)$pkg['id']);
+        }
+
         $this->view('sales/index', [
-            'pageTitle'    => 'المبيعات',
-            'active'       => 'sales',
-            'itemsBySale'  => $itemsBySale,
-            'sales'        => $result['rows'],
-            'total'        => $result['total'],
-            'page'         => $result['page'],
-            'pages'        => $result['pages'],
-            'filters'      => $filters,
-            'packages'     => (new Package())->active(),
-            'distributors' => (new Distributor())->all(),
+            'pageTitle'      => 'المبيعات',
+            'active'         => 'sales',
+            'itemsBySale'    => $itemsBySale,
+            'sales'          => $result['rows'],
+            'total'          => $result['total'],
+            'page'           => $result['page'],
+            'pages'          => $result['pages'],
+            'filters'        => $filters,
+            'packages'       => $packages,
+            'stockByPackage' => $stockByPackage,
+            'distributors'   => (new Distributor())->all(),
         ]);
     }
 
@@ -267,6 +275,12 @@ final class SaleController extends Controller
                 $this->redirect('/sales');
             }
 
+            // Capture the itemized summary BEFORE deletion cascades the rows.
+            $summary = implode(' + ', array_map(
+                static fn ($i) => $i['bundles_count'] . '×' . $i['package_name'],
+                (new Sale())->items($id)
+            ));
+
             $db = \Database::connection();
 
             try {
@@ -287,7 +301,7 @@ final class SaleController extends Controller
             }
 
             $type = $sale['payment_type'] === 'cash' ? 'نقدي' : 'آجل';
-            $this->logAudit('sale_delete', "حذف عملية بيع #{$id}: {$sale['bundles_count']} شدة / {$sale['total']} {$type}");
+            $this->logAudit('sale_delete', "حذف عملية بيع #{$id}: {$summary} / {$sale['total']} {$type}");
         }
 
         $this->redirect('/sales');
