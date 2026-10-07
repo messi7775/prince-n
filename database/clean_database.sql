@@ -125,7 +125,8 @@ CREATE TABLE `distributors` (
   `note` varchar(255) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_distributors_name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -395,38 +396,6 @@ COMMIT;
 SET AUTOCOMMIT=@OLD_AUTOCOMMIT;
 
 --
--- Table structure for table `sale_allocations`
---
-
-DROP TABLE IF EXISTS `sale_allocations`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8mb4 */;
-CREATE TABLE `sale_allocations` (
-  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `sale_id` int(10) unsigned NOT NULL,
-  `inventory_id` int(10) unsigned NOT NULL,
-  `bundles` int(11) NOT NULL DEFAULT 0,
-  PRIMARY KEY (`id`),
-  KEY `fk_alloc_sale` (`sale_id`),
-  KEY `fk_alloc_inventory` (`inventory_id`),
-  CONSTRAINT `fk_alloc_inventory` FOREIGN KEY (`inventory_id`) REFERENCES `inventory` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_alloc_sale` FOREIGN KEY (`sale_id`) REFERENCES `sales` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `sale_allocations`
---
-
-SET @OLD_AUTOCOMMIT=@@AUTOCOMMIT, @@AUTOCOMMIT=0;
-LOCK TABLES `sale_allocations` WRITE;
-/*!40000 ALTER TABLE `sale_allocations` DISABLE KEYS */;
-/*!40000 ALTER TABLE `sale_allocations` ENABLE KEYS */;
-UNLOCK TABLES;
-COMMIT;
-SET AUTOCOMMIT=@OLD_AUTOCOMMIT;
-
---
 -- Table structure for table `sales`
 --
 
@@ -493,6 +462,38 @@ SET @OLD_AUTOCOMMIT=@@AUTOCOMMIT, @@AUTOCOMMIT=0;
 LOCK TABLES `sale_items` WRITE;
 /*!40000 ALTER TABLE `sale_items` DISABLE KEYS */;
 /*!40000 ALTER TABLE `sale_items` ENABLE KEYS */;
+UNLOCK TABLES;
+COMMIT;
+SET AUTOCOMMIT=@OLD_AUTOCOMMIT;
+
+--
+-- Table structure for table `sale_allocations`
+--
+
+DROP TABLE IF EXISTS `sale_allocations`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `sale_allocations` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `sale_id` int(10) unsigned NOT NULL,
+  `inventory_id` int(10) unsigned NOT NULL,
+  `bundles` int(11) NOT NULL DEFAULT 0,
+  PRIMARY KEY (`id`),
+  KEY `fk_alloc_sale` (`sale_id`),
+  KEY `fk_alloc_inventory` (`inventory_id`),
+  CONSTRAINT `fk_alloc_inventory` FOREIGN KEY (`inventory_id`) REFERENCES `inventory` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_alloc_sale` FOREIGN KEY (`sale_id`) REFERENCES `sales` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `sale_allocations`
+--
+
+SET @OLD_AUTOCOMMIT=@@AUTOCOMMIT, @@AUTOCOMMIT=0;
+LOCK TABLES `sale_allocations` WRITE;
+/*!40000 ALTER TABLE `sale_allocations` DISABLE KEYS */;
+/*!40000 ALTER TABLE `sale_allocations` ENABLE KEYS */;
 UNLOCK TABLES;
 COMMIT;
 SET AUTOCOMMIT=@OLD_AUTOCOMMIT;
