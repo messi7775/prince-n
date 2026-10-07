@@ -21,5 +21,5 @@ function ar_date(?string $datetime): string
     if (!$datetime) return '';
     $ts = strtotime($datetime);
     if ($ts === false) return $datetime;
-    return date('Y/m/d H:i', $ts);
+    return date('Y/m/d', $ts);
 }
