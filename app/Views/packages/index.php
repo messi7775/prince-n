@@ -48,11 +48,16 @@
                         <td><?= int_num($pkg['low_stock_threshold']) ?> شدة</td>
                         <td><span class="badge <?= $pkg['status'] === 'active' ? 'ok' : 'zero' ?>"><?= $pkg['status'] === 'active' ? 'نشط' : 'متوقف' ?></span></td>
                         <td class="actions-cell">
-                            <form method="post" action="/packages/delete" class="inline-form" onsubmit="return confirm('حذف هذه الباقة؟')">
-                                <?= csrf_field() ?>
-                                <input type="hidden" name="id" value="<?= (int)$pkg['id'] ?>">
-                                <button class="btn sm danger" type="submit">حذف</button>
-                            </form>
+                            <div class="kebab">
+                                <button class="kebab-btn" type="button" aria-label="إجراءات">⋮</button>
+                                <div class="kebab-dropdown">
+                                    <form method="post" action="/packages/delete" class="inline-form" onsubmit="return confirm('حذف هذه الباقة؟')">
+                                        <?= csrf_field() ?>
+                                        <input type="hidden" name="id" value="<?= (int)$pkg['id'] ?>">
+                                        <button class="kebab-item danger" type="submit">🗑 حذف</button>
+                                    </form>
+                                </div>
+                            </div>
                         </td>
                     </tr>
                     <?php endforeach; ?>

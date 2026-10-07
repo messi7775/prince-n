@@ -26,6 +26,9 @@ final class DashboardController extends Controller
             'operations' => $operations,
             'inventory'  => $inventory,
             'lowStock'   => $lowStock,
+            'daily'      => $report->dailyActivity(7),
+            'topPackages' => $report->topPackages(5),
+            'topDistributors' => $report->topDistributors(5),
         ]);
     }
 }

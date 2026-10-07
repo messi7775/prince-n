@@ -1,8 +1,8 @@
 <aside class="sidebar" data-sidebar>
     <div class="sidebar-top">
         <div class="brand">
-            <div class="brand-mark">⌘</div>
-            <div><strong>شبكة البرنس</strong><span>Prince Network</span></div>
+            <div class="brand-mark">PN</div>
+            <div><strong>شبكة البرنس</strong><span>PRINCE NETWORK</span></div>
         </div>
         <button class="sidebar-close" type="button" data-menu-toggle aria-label="إغلاق القائمة">×</button>
     </div>
@@ -21,9 +21,14 @@
         <a class="nav-item <?= ($active ?? '') === 'cash' ? 'active' : '' ?>" href="/cash"><span>▥</span><b>الصندوق</b></a>
         <a class="nav-item <?= ($active ?? '') === 'reports' ? 'active' : '' ?>" href="/reports"><span>▤</span><b>التقارير</b></a>
         <a class="nav-item <?= ($active ?? '') === 'search' ? 'active' : '' ?>" href="/search"><span>⌕</span><b>البحث</b></a>
+        <div class="nav-sep" role="separator"></div>
         <a class="nav-item <?= ($active ?? '') === 'audit' ? 'active' : '' ?>" href="/audit"><span>◴</span><b>سجل التدقيق</b></a>
         <a class="nav-item <?= ($active ?? '') === 'settings' ? 'active' : '' ?>" href="/settings"><span>⚙</span><b>الإعدادات</b></a>
         <a class="nav-item <?= ($active ?? '') === 'backup' ? 'active' : '' ?>" href="/backup"><span>◫</span><b>النسخ الاحتياطي</b></a>
+        <div class="nav-sep" role="separator"></div>
+        <button class="sidebar-collapse" type="button" data-sidebar-collapse aria-label="طي القائمة">
+            <span class="arr">›</span><b>طي القائمة</b>
+        </button>
         <form method="post" action="/logout" class="logout-form">
             <?= csrf_field() ?>
             <button class="nav-item logout" type="submit"><span>↪</span><b>تسجيل الخروج</b></button>

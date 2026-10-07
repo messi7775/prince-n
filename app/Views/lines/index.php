@@ -23,6 +23,17 @@
     </section>
 
     <section class="dashboard-panel">
+        <div class="section-title"><h3>البحث والفلترة</h3><span>⌕</span></div>
+        <form method="get" action="/lines" class="entity-form">
+            <div class="form-grid">
+                <label>بحث<input type="text" name="q" value="<?= e($q ?? '') ?>" placeholder="اسم الخط / المزود"></label>
+            </div>
+            <button class="btn primary" type="submit">بحث</button>
+            <a class="btn" href="/lines">مسح</a>
+        </form>
+    </section>
+
+    <section class="dashboard-panel">
         <div class="section-title"><h3>قائمة الخطوط</h3><span>⌁</span></div>
         <?php if (empty($lines)): ?>
             <div class="empty-state">لا توجد خطوط حتى الآن</div>
@@ -38,12 +49,17 @@
                         <td><?= e($l['provider'] ?? '') ?></td>
                         <td><span class="badge <?= (int)$l['balance'] >= 0 ? 'ok' : 'zero' ?>"><?= money($l['balance']) ?></span></td>
                         <td class="actions-cell">
-                            <button class="btn sm primary line-edit-btn" type="button" data-id="<?= (int)$l['id'] ?>" data-name="<?= e($l['name']) ?>" data-provider="<?= e($l['provider'] ?? '') ?>" data-note="<?= e($l['note'] ?? '') ?>">تعديل</button>
-                            <form method="post" action="/lines/delete" class="inline-form" onsubmit="return confirm('حذف هذا الخط؟')">
-                                <?= csrf_field() ?>
-                                <input type="hidden" name="id" value="<?= (int)$l['id'] ?>">
-                                <button class="btn sm danger" type="submit">حذف</button>
-                            </form>
+                            <div class="kebab">
+                                <button class="kebab-btn" type="button" aria-label="إجراءات">⋮</button>
+                                <div class="kebab-dropdown">
+                                    <button class="kebab-item line-edit-btn" type="button" data-id="<?= (int)$l['id'] ?>" data-name="<?= e($l['name']) ?>" data-provider="<?= e($l['provider'] ?? '') ?>" data-note="<?= e($l['note'] ?? '') ?>">✎ تعديل</button>
+                                    <form method="post" action="/lines/delete" class="inline-form" onsubmit="return confirm('حذف هذا الخط؟')">
+                                        <?= csrf_field() ?>
+                                        <input type="hidden" name="id" value="<?= (int)$l['id'] ?>">
+                                        <button class="kebab-item danger" type="submit">🗑 حذف</button>
+                                    </form>
+                                </div>
+                            </div>
                         </td>
                     </tr>
                     <?php endforeach; ?>

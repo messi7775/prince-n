@@ -59,7 +59,14 @@ final class PackageController extends Controller
             $packageId = (new Package())->create($data);
 
             // Business rule: a new package starts with 5 bundles automatically.
-            (new Inventory())->findOrCreateByPackage($packageId, 5, $bundlePrice);
+            (new Inventory())->create([
+                'package_id'   => $packageId,
+                'quantity'     => 5,
+                'sold'         => 0,
+                'bundle_price' => $bundlePrice,
+                'status'       => 'active',
+                'note'         => 'الدفعة الافتتاحية',
+            ]);
 
             $db->commit();
         } catch (\Throwable $e) {
@@ -129,8 +136,13 @@ final class PackageController extends Controller
             $this->redirect('/packages');
         }
 
-        $inventory = (new Inventory())->findByPackageId($id);
-        if ($inventory !== null && (int)$inventory['quantity'] > 0) {
+        // Block deletion when any batch still holds stock or had sales recorded.
+        $inventory = new Inventory();
+        $stillStocked = $inventory->fetchInt(
+            'SELECT COUNT(*) FROM inventory WHERE package_id = ? AND (quantity - sold > 0 OR sold > 0)',
+            [$id]
+        ) > 0;
+        if ($stillStocked) {
             Session::set('package_error', 'لا يمكن حذف الباقة لأن عليها مخزون حالي. صفّر المخزون أولًا.');
             $this->logAudit('package_delete_blocked', 'منع حذف باقة عليها مخزون: ' . ($pkg['name'] ?? ''));
             $this->redirect('/packages');

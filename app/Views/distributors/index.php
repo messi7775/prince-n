@@ -29,6 +29,17 @@
     </section>
 
     <section class="dashboard-panel">
+        <div class="section-title"><h3>البحث والفلترة</h3><span>⌕</span></div>
+        <form method="get" action="/distributors" class="entity-form">
+            <div class="form-grid">
+                <label>بحث<input type="text" name="q" value="<?= e($q) ?>" placeholder="اسم / هاتف / ملاحظة"></label>
+            </div>
+            <button class="btn primary" type="submit">تطبيق</button>
+            <a class="btn" href="/distributors">مسح الفلاتر</a>
+        </form>
+    </section>
+
+    <section class="dashboard-panel">
         <div class="section-title"><h3>قائمة الموزعين</h3><span>♙</span></div>
         <?php if (empty($distributors)): ?>
             <div class="empty-state">لا يوجد موزعون حتى الآن</div>
@@ -47,11 +58,17 @@
                         <td><?= money($d['paid_total']) ?></td>
                         <td><span class="badge <?= $balance > 0 ? 'zero' : 'ok' ?>"><?= money($balance) ?><?php if ($balance < 0): ?> — رصيد للموزع<?php elseif ($balance > 0): ?> — مستحق علينا<?php else: ?> — متعادل<?php endif; ?></span></td>
                         <td class="actions-cell">
-                            <form method="post" action="/distributors/delete" class="inline-form" onsubmit="return confirm('حذف هذا الموزع؟')">
-                                <?= csrf_field() ?>
-                                <input type="hidden" name="id" value="<?= (int)$d['id'] ?>">
-                                <button class="btn sm danger" type="submit">حذف</button>
-                            </form>
+                            <div class="kebab">
+                                <button class="kebab-btn" type="button" aria-label="إجراءات">⋮</button>
+                                <div class="kebab-dropdown">
+                                    <a class="kebab-item" href="/distributors/show?id=<?= (int)$d['id'] ?>">📄 كشف الحساب</a>
+                                    <form method="post" action="/distributors/delete" class="inline-form" onsubmit="return confirm('حذف هذا الموزع؟')">
+                                        <?= csrf_field() ?>
+                                        <input type="hidden" name="id" value="<?= (int)$d['id'] ?>">
+                                        <button class="kebab-item danger" type="submit">🗑 حذف</button>
+                                    </form>
+                                </div>
+                            </div>
                         </td>
                     </tr>
                     <?php endforeach; ?>

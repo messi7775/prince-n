@@ -33,9 +33,30 @@
     </section>
 
     <section class="dashboard-panel">
-        <div class="section-title"><h3>سجل تسديدات الخطوط</h3><span>▭</span></div>
+        <div class="section-title"><h3>البحث والفلترة</h3><span>⌕</span></div>
+        <form method="get" action="/line-payments" class="entity-form">
+            <div class="form-grid">
+                <label>بحث<input type="text" name="q" value="<?= e($filters['q']) ?>" placeholder="خط / ملاحظة"></label>
+                <label>الخط
+                    <select name="line_id">
+                        <option value="">الكل</option>
+                        <?php foreach ($lines as $l): ?>
+                            <option value="<?= (int)$l['id'] ?>" <?= $filters['line_id'] === (int)$l['id'] ? 'selected' : '' ?>><?= e($l['name']) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </label>
+                <label>من تاريخ<input type="date" name="date_from" value="<?= e($filters['date_from']) ?>"></label>
+                <label>إلى تاريخ<input type="date" name="date_to" value="<?= e($filters['date_to']) ?>"></label>
+            </div>
+            <button class="btn primary" type="submit">تطبيق</button>
+            <a class="btn" href="/line-payments">مسح الفلاتر</a>
+        </form>
+    </section>
+
+    <section class="dashboard-panel">
+        <div class="section-title"><h3>سجل تسديدات الخطوط (<?= money($total) ?>)</h3><span>▭</span></div>
         <?php if (empty($payments)): ?>
-            <div class="empty-state">لا توجد تسديدات حتى الآن</div>
+            <div class="empty-state">لا توجد تسديدات مطابقة</div>
         <?php else: ?>
             <table class="data-table">
                 <thead>
@@ -50,12 +71,17 @@
                         <td><span class="badge zero">خرج</span></td>
                         <td><?= e($p['note'] ?? '') ?></td>
                         <td class="actions-cell">
-                            <button class="btn sm primary line-payment-edit-btn" type="button" data-id="<?= (int)$p['id'] ?>" data-line-id="<?= (int)$p['line_id'] ?>" data-amount="<?= (int)$p['amount'] ?>" data-note="<?= e($p['note'] ?? '') ?>">تعديل</button>
-                            <form method="post" action="/line-payments/delete" class="inline-form" onsubmit="return confirm('حذف هذا التسديد؟ سيتم أيضًا إزالة أثره من الصندوق.')">
-                                <?= csrf_field() ?>
-                                <input type="hidden" name="id" value="<?= (int)$p['id'] ?>">
-                                <button class="btn sm danger" type="submit">حذف</button>
-                            </form>
+                            <div class="kebab">
+                                <button class="kebab-btn" type="button" aria-label="إجراءات">⋮</button>
+                                <div class="kebab-dropdown">
+                                    <button class="kebab-item line-payment-edit-btn" type="button" data-id="<?= (int)$p['id'] ?>" data-line-id="<?= (int)$p['line_id'] ?>" data-amount="<?= (int)$p['amount'] ?>" data-note="<?= e($p['note'] ?? '') ?>">✎ تعديل</button>
+                                    <form method="post" action="/line-payments/delete" class="inline-form" onsubmit="return confirm('حذف هذا التسديد؟ سيتم أيضًا إزالة أثره من الصندوق.')">
+                                        <?= csrf_field() ?>
+                                        <input type="hidden" name="id" value="<?= (int)$p['id'] ?>">
+                                        <button class="kebab-item danger" type="submit">🗑 حذف</button>
+                                    </form>
+                                </div>
+                            </div>
                         </td>
                     </tr>
                     <?php endforeach; ?>

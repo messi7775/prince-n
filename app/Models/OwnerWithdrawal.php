@@ -12,9 +12,19 @@ final class OwnerWithdrawal extends Model
         return $this->fetchAll('SELECT * FROM owner_withdrawals ORDER BY created_at DESC');
     }
 
+    public function find(int $id): ?array
+    {
+        return $this->fetchOne('SELECT * FROM owner_withdrawals WHERE id = ?', [$id]);
+    }
+
     public function create(array $data): int
     {
         return $this->insert('owner_withdrawals', $data);
+    }
+
+    public function update(int $id, array $data): int
+    {
+        return $this->updateRow('owner_withdrawals', $id, $data);
     }
 
     public function delete(int $id): int

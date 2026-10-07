@@ -5,11 +5,13 @@ namespace Controllers;
 
 use Controller;
 use Request;
+use Session;
 use Models\Sale;
 use Models\Package;
 use Models\Distributor;
 use Models\Inventory;
 use Models\CashMovement;
+use Services\StockService;
 
 final class SaleController extends Controller
 {
@@ -17,13 +19,49 @@ final class SaleController extends Controller
     {
         $this->requireAuth();
 
+        $filters = [
+            'q'              => (string)$request->input('q', ''),
+            'date_from'      => (string)$request->input('date_from', ''),
+            'date_to'        => (string)$request->input('date_to', ''),
+            'distributor_id' => (int)$request->input('distributor_id', 0),
+            'package_id'     => (int)$request->input('package_id', 0),
+            'payment_type'   => (string)$request->input('payment_type', ''),
+            'sort'           => (string)$request->input('sort', 'date'),
+            'dir'            => (string)$request->input('dir', 'desc'),
+            'page'           => (int)$request->input('page', 1),
+            'per_page'       => 20,
+        ];
+
+        $result = (new Sale())->search($filters);
+
         $this->view('sales/index', [
             'pageTitle'    => 'المبيعات',
             'active'       => 'sales',
-            'sales'        => (new Sale())->all(),
+            'sales'        => $result['rows'],
+            'total'        => $result['total'],
+            'page'         => $result['page'],
+            'pages'        => $result['pages'],
+            'filters'      => $filters,
             'packages'     => (new Package())->active(),
             'distributors' => (new Distributor())->all(),
         ]);
+    }
+
+    /** Printable receipt (وصل) for one sale. */
+    public function receipt(Request $request): void
+    {
+        $this->requireAuth();
+
+        $id = (int)$request->input('id', 0);
+        $sale = $id > 0 ? (new Sale())->findWithNames($id) : null;
+        if (!$sale) {
+            $this->redirect('/sales');
+        }
+
+        $this->view('sales/receipt', [
+            'sale'     => $sale,
+            'pageTitle' => 'وصل بيع #' . $id,
+        ], null);
     }
 
     public function store(Request $request): void
@@ -36,13 +74,25 @@ final class SaleController extends Controller
             $this->redirect('/sales');
         }
 
+        // Business rule: a sale may never exceed the available stock.
+        if ((new Inventory())->availableForPackage((int)$data['package_id']) < (int)$data['bundles_count']) {
+            Session::flash('error', 'الكمية المطلوبة غير متوفرة في المخزون — لا يمكن البيع فوق المخزون.');
+            $this->redirect('/sales');
+        }
+
+        $stock = new StockService();
+
         $db = \Database::connection();
 
         try {
             $db->beginTransaction();
 
-            $this->deductInventory($data['package_id'], $data['bundles_count']);
             $saleId = (new Sale())->create($data);
+
+            // Allocate stock exactly to the batches (FIFO) and log movements.
+            if ($stock->consume((int)$data['package_id'], (int)$data['bundles_count'], $saleId) === null) {
+                throw new \RuntimeException('insufficient_stock');
+            }
 
             if ($data['payment_type'] === 'cash') {
                 (new CashMovement())->create([
@@ -82,17 +132,33 @@ final class SaleController extends Controller
             $this->redirect('/sales');
         }
 
+        $stock = new StockService();
+
+        // The old sale's bundles go back to stock before the new sale is
+        // applied, so a same-package edit only needs the difference to fit.
+        $available = (new Inventory())->availableForPackage((int)$new['package_id']);
+        if ((int)$old['package_id'] === (int)$new['package_id']) {
+            $available += (int)$old['bundles_count'];
+        }
+        if ($available < (int)$new['bundles_count']) {
+            Session::flash('error', 'الكمية المطلوبة غير متوفرة في المخزون — لا يمكن البيع فوق المخزون.');
+            $this->redirect('/sales');
+        }
+
         $db = \Database::connection();
 
         try {
             $db->beginTransaction();
 
-            // Reverse the old sale first, then apply the new sale.
-            $this->restoreInventory((int)$old['package_id'], (int)$old['bundles_count']);
+            // Reverse the old sale: return its bundles to the original batches.
+            $stock->releaseSale($id, 'return', 'تعديل البيع #' . $id);
             (new CashMovement())->deleteByReference('sale', $id);
 
-            $this->deductInventory($new['package_id'], $new['bundles_count']);
             (new Sale())->update($id, $new);
+
+            if ($stock->consume((int)$new['package_id'], (int)$new['bundles_count'], $id) === null) {
+                throw new \RuntimeException('insufficient_stock');
+            }
 
             if ($new['payment_type'] === 'cash') {
                 (new CashMovement())->create([
@@ -140,10 +206,9 @@ final class SaleController extends Controller
             try {
                 $db->beginTransaction();
 
-                // Deleting a sale reverses its inventory effect and cash effect.
-                if ($sale['package_id'] !== null) {
-                    $this->restoreInventory((int)$sale['package_id'], (int)$sale['bundles_count']);
-                }
+                // Deleting a sale returns its bundles to the original batches
+                // and removes its cash effect (when it was a cash sale).
+                (new StockService())->releaseSale($id, 'sale_delete', 'حذف البيع #' . $id);
                 (new Sale())->delete($id);
                 (new CashMovement())->deleteByReference('sale', $id);
 
@@ -215,63 +280,5 @@ final class SaleController extends Controller
             'payment_type'   => $paymentType,
             'note'           => $note !== '' ? $note : null,
         ];
-    }
-
-    /**
-     * Apply a sale to stock. Stock is allowed to go negative because the
-     * business rule permits recording a sale above current physical stock.
-     * This makes the later reversal exact when the sale is edited/deleted.
-     */
-    private function deductInventory(int $packageId, int $count): void
-    {
-        $inventory = new Inventory();
-        $row = $inventory->findOrCreateByPackage($packageId, 0, (int)(new Package())->find($packageId)['bundle_price']);
-        $oldQty = (int)$row['quantity'];
-        $newQty = $oldQty - $count;
-        $price = (int)$row['bundle_price'];
-
-        $inventory->setQuantity($row['id'], $newQty);
-        $inventory->logMovement([
-            'package_id'   => $packageId,
-            'action'       => 'edit',
-            'old_quantity' => $oldQty,
-            'new_quantity' => $newQty,
-            'bundle_price' => $price,
-            'old_value'    => $oldQty * $price,
-            'new_value'    => $newQty * $price,
-            'note'         => 'خصم بسبب بيع ' . $count . ' شدة',
-        ]);
-    }
-
-    /** Restore exactly the quantity consumed by a previous sale. */
-    private function restoreInventory(int $packageId, int $count): void
-    {
-        if ($packageId <= 0 || $count <= 0) {
-            return;
-        }
-
-        $inventory = new Inventory();
-        $row = $inventory->findByPackageId($packageId);
-        if ($row === null) {
-            // The package may have been deleted after the sale. There is then
-            // no valid stock row to restore without recreating deleted data.
-            return;
-        }
-
-        $oldQty = (int)$row['quantity'];
-        $newQty = $oldQty + $count;
-        $price = (int)$row['bundle_price'];
-
-        $inventory->setQuantity((int)$row['id'], $newQty);
-        $inventory->logMovement([
-            'package_id'   => $packageId,
-            'action'       => 'edit',
-            'old_quantity' => $oldQty,
-            'new_quantity' => $newQty,
-            'bundle_price' => $price,
-            'old_value'    => $oldQty * $price,
-            'new_value'    => $newQty * $price,
-            'note'         => 'إرجاع ' . $count . ' شدة بسبب تعديل/حذف بيع',
-        ]);
     }
 }
