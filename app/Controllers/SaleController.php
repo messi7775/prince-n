@@ -241,7 +241,7 @@ final class SaleController extends Controller
         }
 
         $oldType = $old['payment_type'] === 'cash' ? 'نقدي' : 'آجل';
-        $newType = $new['payment_type'] === 'cash' ? 'نقدي' : 'آجل';
+        $newType = $meta['payment_type'] === 'cash' ? 'نقدي' : 'آجل';
         $summary = implode(' + ', array_map(
             static fn ($i) => $i['bundles_count'] . '×' . $i['package_name'] . '@' . $i['bundle_price'],
             $items
